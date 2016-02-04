@@ -7,10 +7,6 @@ import (
 	"strings"
 )
 
-const (
-	ImgRoot = "./public/"
-)
-
 func LoadImage(imgName, category string) (img image.Image, err error) {
 	file, err := os.Open(ImgRoot + category + "/" + imgName)
 	if err != nil {

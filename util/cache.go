@@ -9,10 +9,6 @@ import (
 	"time"
 )
 
-const (
-	CacheRoot = "./cache/"
-)
-
 var (
 	imgCache = NewSet()
 )
