@@ -10,10 +10,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var (
-	imgPath = "./public/"
-)
-
 // http://xxx.com/t?n=22.jpg&s=100x200&c=pure
 func imageHandler(context *gin.Context) {
 	imgName := context.Query("n")
@@ -26,7 +22,7 @@ func imageHandler(context *gin.Context) {
 		return
 	}
 
-	srcImg, err := util.LoadImage(imgPath + imgName)
+	srcImg, err := util.LoadImage(imgName)
 	if err != nil {
 		return
 	}
@@ -51,6 +47,8 @@ func rspImgWriter(dstImg image.Image, context *gin.Context) {
 }
 
 func main() {
+	gin.SetMode(gin.ReleaseMode)
+
 	router := gin.Default()
 	router.GET("/t", imageHandler)
 	router.Run(":6789")

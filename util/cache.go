@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	cachePath = "./cache/"
+	CachePath = "./cache/"
 )
 
 var (
@@ -24,7 +24,7 @@ func init() {
 // xxx.jpg.100x200
 func loadCache() {
 	newImgCache := NewSet()
-	files, _ := ioutil.ReadDir(cachePath)
+	files, _ := ioutil.ReadDir(CachePath)
 	for _, file := range files {
 		if file.IsDir() {
 			continue
@@ -37,7 +37,7 @@ func loadCache() {
 
 func WriteCache(imgName, imgArg string, img image.Image) {
 	cacheName := genCacheName(imgName, imgArg)
-	cacheFile, err := os.Create(cachePath + cacheName)
+	cacheFile, err := os.Create(CachePath + cacheName)
 	if err != nil {
 		fmt.Printf("WriteCache err:%v", err)
 		return
@@ -57,7 +57,7 @@ func FindInCache(imgName, imgArg string) image.Image {
 		return nil
 	}
 
-	img, err := LoadImage(cachePath + cacheName)
+	img, err := LoadImage(CachePath + cacheName)
 	if err != nil {
 		return nil
 	}

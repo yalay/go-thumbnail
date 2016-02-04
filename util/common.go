@@ -7,8 +7,12 @@ import (
 	"strings"
 )
 
-func LoadImage(path string) (img image.Image, err error) {
-	file, err := os.Open(path)
+const (
+	ImgPath = "./public/"
+)
+
+func LoadImage(imgName string) (img image.Image, err error) {
+	file, err := os.Open(ImgPath + imgName)
 	if err != nil {
 		return
 	}
