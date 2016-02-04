@@ -12,4 +12,5 @@ var (
 func init() {
 	flag.StringVar(&CacheRoot, "cPath", "./cache/", "cache path")
 	flag.StringVar(&ImgRoot, "sPath", "./public/", "source image path")
+	flag.Parse()
 }
