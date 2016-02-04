@@ -16,8 +16,8 @@ import (
 
 	"github.com/gin-gonic/gin/binding"
 	"github.com/gin-gonic/gin/render"
+	"github.com/golang/net/context"
 	"github.com/manucorporat/sse"
-	"golang.org/x/net/context"
 )
 
 // Content-Type MIME of the most common data formats
