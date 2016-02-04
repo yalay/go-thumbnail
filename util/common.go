@@ -8,11 +8,11 @@ import (
 )
 
 const (
-	ImgPath = "./public/"
+	ImgRoot = "./public/"
 )
 
-func LoadImage(imgName string) (img image.Image, err error) {
-	file, err := os.Open(ImgPath + imgName)
+func LoadImage(imgName, category string) (img image.Image, err error) {
+	file, err := os.Open(ImgRoot + category + "/" + imgName)
 	if err != nil {
 		return
 	}

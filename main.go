@@ -14,15 +14,15 @@ import (
 func imageHandler(context *gin.Context) {
 	imgName := context.Query("n")
 	size := context.Query("s")
-	//category := context.Query("c")
+	category := context.Query("c")
 
-	cacheImg := util.FindInCache(imgName, size)
+	cacheImg := util.FindInCache(imgName, category, size)
 	if cacheImg != nil {
 		rspImgWriter(cacheImg, context)
 		return
 	}
 
-	srcImg, err := util.LoadImage(imgName)
+	srcImg, err := util.LoadImage(imgName, category)
 	if err != nil {
 		return
 	}
@@ -34,7 +34,7 @@ func imageHandler(context *gin.Context) {
 	} else {
 		thumbImg := util.Thumbnail(dstWidth, dstHeight, srcImg)
 		dstImg = util.CropImg(thumbImg, int(dstWidth), int(dstHeight))
-		go util.WriteCache(imgName, size, dstImg)
+		go util.WriteCache(imgName, category, size, dstImg)
 	}
 
 	rspImgWriter(dstImg, context)

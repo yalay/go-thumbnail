@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	CachePath = "./cache/"
+	CacheRoot = "./cache/"
 )
 
 var (
@@ -21,10 +21,24 @@ func init() {
 	go run()
 }
 
-// xxx.jpg.100x200
+func getCacheImg(imgName string) (img image.Image, err error) {
+	file, err := os.Open(CacheRoot + imgName)
+	if err != nil {
+		return
+	}
+	defer file.Close()
+	img, _, err = image.Decode(file)
+	return
+}
+
+// xxx.jpg.pure.100x200
 func loadCache() {
 	newImgCache := NewSet()
-	files, _ := ioutil.ReadDir(CachePath)
+	if _, err := os.Stat(CacheRoot); err != nil {
+		os.MkdirAll(CacheRoot, os.ModePerm)
+	}
+
+	files, _ := ioutil.ReadDir(CacheRoot)
 	for _, file := range files {
 		if file.IsDir() {
 			continue
@@ -35,9 +49,9 @@ func loadCache() {
 	imgCache = newImgCache
 }
 
-func WriteCache(imgName, imgArg string, img image.Image) {
-	cacheName := genCacheName(imgName, imgArg)
-	cacheFile, err := os.Create(CachePath + cacheName)
+func WriteCache(imgName, category, imgArg string, img image.Image) {
+	cacheName := genCacheName(imgName, category, imgArg)
+	cacheFile, err := os.Create(CacheRoot + cacheName)
 	if err != nil {
 		fmt.Printf("WriteCache err:%v", err)
 		return
@@ -47,17 +61,17 @@ func WriteCache(imgName, imgArg string, img image.Image) {
 	imgCache.Add(cacheName)
 }
 
-func genCacheName(imgName, imgArg string) string {
-	return fmt.Sprintf("%s.%s", imgName, imgArg)
+func genCacheName(imgName, category, imgArg string) string {
+	return fmt.Sprintf("%s.%s.%s", imgName, category, imgArg)
 }
 
-func FindInCache(imgName, imgArg string) image.Image {
-	cacheName := genCacheName(imgName, imgArg)
+func FindInCache(imgName, category, imgArg string) image.Image {
+	cacheName := genCacheName(imgName, category, imgArg)
 	if !imgCache.Contains(cacheName) {
 		return nil
 	}
 
-	img, err := LoadImage(CachePath + cacheName)
+	img, err := getCacheImg(cacheName)
 	if err != nil {
 		return nil
 	}
