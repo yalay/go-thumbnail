@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"image"
 	"image/jpeg"
 	"net/http"
@@ -24,6 +25,8 @@ func imageHandler(context *gin.Context) {
 
 	srcImg, err := util.LoadImage(imgName, category)
 	if err != nil {
+		fmt.Printf("[GIN] LoadImage error:%v\n", err)
+		context.String(http.StatusForbidden, "LoadImage error:%v", err)
 		return
 	}
 

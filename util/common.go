@@ -8,7 +8,7 @@ import (
 )
 
 func LoadImage(imgName, category string) (img image.Image, err error) {
-	file, err := os.Open(ImgRoot + category + "/" + imgName)
+	file, err := os.Open(ImgRoot + "/" + category + "/" + imgName)
 	if err != nil {
 		return
 	}

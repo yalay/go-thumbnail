@@ -18,7 +18,7 @@ func init() {
 }
 
 func getCacheImg(imgName string) (img image.Image, err error) {
-	file, err := os.Open(CacheRoot + imgName)
+	file, err := os.Open(CacheRoot + "/" + imgName)
 	if err != nil {
 		return
 	}
@@ -47,7 +47,7 @@ func loadCache() {
 
 func WriteCache(imgName, category, imgArg string, img image.Image) {
 	cacheName := genCacheName(imgName, category, imgArg)
-	cacheFile, err := os.Create(CacheRoot + cacheName)
+	cacheFile, err := os.Create(CacheRoot + "/" + cacheName)
 	if err != nil {
 		fmt.Printf("WriteCache err:%v", err)
 		return
