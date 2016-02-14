@@ -18,9 +18,6 @@ func LoadImage(imgName, imgDate, category string) (img image.Image, err error) {
 }
 
 func ParseImgArg(imgArg string) (uint, uint) {
-	if imgArg == "" {
-		return 0, 0
-	}
 	args := strings.Split(imgArg, "x")
 	if len(args) != 2 {
 		return 0, 0
