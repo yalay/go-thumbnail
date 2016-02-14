@@ -45,8 +45,8 @@ func loadCache() {
 	imgCache = newImgCache
 }
 
-func WriteCache(imgName, category, imgArg string, img image.Image) {
-	cacheName := genCacheName(imgName, category, imgArg)
+func WriteCache(imgName, imgDate, category, imgArg string, img image.Image) {
+	cacheName := genCacheName(imgName, imgDate, category, imgArg)
 	cacheFile, err := os.Create(CacheRoot + "/" + cacheName)
 	if err != nil {
 		fmt.Printf("WriteCache err:%v", err)
@@ -57,12 +57,12 @@ func WriteCache(imgName, category, imgArg string, img image.Image) {
 	imgCache.Add(cacheName)
 }
 
-func genCacheName(imgName, category, imgArg string) string {
-	return fmt.Sprintf("%s.%s.%s", imgName, category, imgArg)
+func genCacheName(imgName, imgDate, category, imgArg string) string {
+	return fmt.Sprintf("%s.%s.%s.%s", imgName, imgDate, category, imgArg)
 }
 
-func FindInCache(imgName, category, imgArg string) image.Image {
-	cacheName := genCacheName(imgName, category, imgArg)
+func FindInCache(imgName, imgDate, category, imgArg string) image.Image {
+	cacheName := genCacheName(imgName, imgDate, category, imgArg)
 	if !imgCache.Contains(cacheName) {
 		return nil
 	}

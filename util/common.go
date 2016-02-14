@@ -7,8 +7,8 @@ import (
 	"strings"
 )
 
-func LoadImage(imgName, category string) (img image.Image, err error) {
-	file, err := os.Open(ImgRoot + "/" + category + "/" + imgName)
+func LoadImage(imgName, imgDate, category string) (img image.Image, err error) {
+	file, err := os.Open(ImgRoot + "/" + category + "/" + imgDate + "/" + imgName)
 	if err != nil {
 		return
 	}
