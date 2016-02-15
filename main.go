@@ -11,29 +11,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var (
-	allowCate = util.NewSet("Pure", "Model", "Silk", "Star", "Sex", "Net")
-)
-
-// http://xxx.com/160214/22.jpg?s=100x200&c=pure
+// http://xxx.com/160214/22.jpg?s=100x200
 func imageHandler(context *gin.Context) {
-	imgDate := context.Param("date")
-	imgName := context.Param("name")
+	imgPath := context.Param("path")
 	size := context.Query("s")
-	category := context.Query("c")
 
-	if !allowCate.Contains(category) {
-		context.String(http.StatusForbidden, "category forbidden")
-		return
-	}
-
-	cacheImg := util.FindInCache(imgName, imgDate, category, size)
+	cacheImg := util.FindInCache(imgPath, size)
 	if cacheImg != nil {
 		rspImgWriter(cacheImg, context)
 		return
 	}
 
-	srcImg, err := util.LoadImage(imgName, imgDate, category)
+	srcImg, err := util.LoadImage(imgPath)
 	if err != nil {
 		fmt.Printf("[GIN] LoadImage error:%v\n", err)
 		context.String(http.StatusNoContent, "LoadImage error:%v", err)
@@ -53,7 +42,7 @@ func imageHandler(context *gin.Context) {
 
 		thumbImg := util.Thumbnail(dstWidth, dstHeight, srcImg)
 		dstImg = util.CropImg(thumbImg, int(dstWidth), int(dstHeight))
-		go util.WriteCache(imgName, imgDate, category, size, dstImg)
+		go util.WriteCache(imgPath, size, dstImg)
 	}
 
 	rspImgWriter(dstImg, context)
@@ -69,6 +58,6 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 
 	router := gin.Default()
-	router.GET("/:date/:name", imageHandler)
+	router.GET("/*path", imageHandler)
 	router.Run(":6789")
 }

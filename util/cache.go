@@ -1,6 +1,7 @@
 package util
 
 import (
+	"crypto/md5"
 	"fmt"
 	"image"
 	"image/jpeg"
@@ -18,7 +19,7 @@ func init() {
 }
 
 func getCacheImg(imgName string) (img image.Image, err error) {
-	file, err := os.Open(CacheRoot + "/" + imgName)
+	file, err := os.Open(CacheRoot + imgName)
 	if err != nil {
 		return
 	}
@@ -45,9 +46,9 @@ func loadCache() {
 	imgCache = newImgCache
 }
 
-func WriteCache(imgName, imgDate, category, imgArg string, img image.Image) {
-	cacheName := genCacheName(imgName, imgDate, category, imgArg)
-	cacheFile, err := os.Create(CacheRoot + "/" + cacheName)
+func WriteCache(imgPath, imgArg string, img image.Image) {
+	cacheName := genCacheName(imgPath, imgArg)
+	cacheFile, err := os.Create(CacheRoot + cacheName)
 	if err != nil {
 		fmt.Printf("WriteCache err:%v", err)
 		return
@@ -57,12 +58,12 @@ func WriteCache(imgName, imgDate, category, imgArg string, img image.Image) {
 	imgCache.Add(cacheName)
 }
 
-func genCacheName(imgName, imgDate, category, imgArg string) string {
-	return fmt.Sprintf("%s.%s.%s.%s", imgName, imgDate, category, imgArg)
+func genCacheName(imgPath, imgArg string) string {
+	return fmt.Sprintf("%x", md5.Sum([]byte(imgPath+imgArg)))
 }
 
-func FindInCache(imgName, imgDate, category, imgArg string) image.Image {
-	cacheName := genCacheName(imgName, imgDate, category, imgArg)
+func FindInCache(imgPath, imgArg string) image.Image {
+	cacheName := genCacheName(imgPath, imgArg)
 	if !imgCache.Contains(cacheName) {
 		return nil
 	}
