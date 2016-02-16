@@ -24,9 +24,9 @@ func imageHandler(context *gin.Context) {
 
 	// 无size指定，默认为原图大小
 	if size == "" {
-		rspOriginImg(imgPath, context)
+		go rspOriginImg(imgPath, context)
 	} else {
-		rspThumbnailImg(imgPath, size, context)
+		go rspThumbnailImg(imgPath, size, context)
 	}
 	return
 }
