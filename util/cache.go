@@ -30,13 +30,14 @@ func WriteCache(imgPath, imgArg string, img image.Image) {
 	imgCache.Add(cacheName)
 }
 
-func FindInCache(imgPath, imgArg string) ([]byte, error) {
+func FindInCache(imgPath, imgArg string) []byte {
 	cacheName := genCacheName(imgPath, imgArg)
 	if !imgCache.Contains(cacheName) {
-		return nil, nil
+		return nil
 	}
 
-	return ioutil.ReadFile(CacheRoot + cacheName)
+	cacheBuff, _ := ioutil.ReadFile(CacheRoot + cacheName)
+	return cacheBuff
 }
 
 // %2FPure%2F22.jpg100x100

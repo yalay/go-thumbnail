@@ -15,7 +15,7 @@ func imageHandler(context *gin.Context) {
 	imgPath := context.Param("path")
 	size := context.Query("s")
 
-	cacheBuff, _ := util.FindInCache(imgPath, size)
+	cacheBuff := util.FindInCache(imgPath, size)
 	if len(cacheBuff) > 0 {
 		// 用状态码201表示当前从缓存中读取的数据,便于日志直接查看
 		context.Data(http.StatusCreated, "image/jpeg", cacheBuff)
