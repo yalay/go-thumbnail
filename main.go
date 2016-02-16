@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"image/jpeg"
 	"net/http"
+	"strings"
 	"util"
 
 	"github.com/gin-gonic/gin"
@@ -15,6 +16,11 @@ func imageHandler(context *gin.Context) {
 	imgPath := context.Param("path")
 	size := context.Query("s")
 
+	if skipFavicon(imgPath) {
+		context.String(http.StatusNotFound, "skip favicon")
+		return
+	}
+
 	cacheBuff := util.FindInCache(imgPath, size)
 	if len(cacheBuff) > 0 {
 		// 用状态码201表示当前从缓存中读取的数据,便于日志直接查看
@@ -24,9 +30,9 @@ func imageHandler(context *gin.Context) {
 
 	// 无size指定，默认为原图大小
 	if size == "" {
-		go rspOriginImg(imgPath, context)
+		rspOriginImg(imgPath, context)
 	} else {
-		go rspThumbnailImg(imgPath, size, context)
+		rspThumbnailImg(imgPath, size, context)
 	}
 	return
 }
@@ -35,7 +41,7 @@ func rspOriginImg(imgPath string, context *gin.Context) {
 	imgBuff, err := util.LoadFile(imgPath)
 	if err != nil {
 		fmt.Printf("[GIN] LoadFile error:%v\n", err)
-		context.String(http.StatusNoContent, "LoadFile error:%v", err)
+		context.String(http.StatusNotFound, "LoadFile error:%v", err)
 	} else {
 		context.Data(http.StatusOK, "image/jpeg", imgBuff)
 	}
@@ -52,7 +58,7 @@ func rspThumbnailImg(imgPath, size string, context *gin.Context) {
 	srcImg, err := util.LoadImage(imgPath)
 	if err != nil {
 		fmt.Printf("[GIN] LoadImage error:%v\n", err)
-		context.String(http.StatusNoContent, "LoadImage error:%v", err)
+		context.String(http.StatusNotFound, "LoadImage error:%v", err)
 		return
 	}
 
@@ -64,6 +70,14 @@ func rspThumbnailImg(imgPath, size string, context *gin.Context) {
 	jpeg.Encode(buff, dstImg, nil)
 	context.Data(http.StatusOK, "image/jpeg", buff.Bytes())
 	return
+}
+
+func skipFavicon(imgPath string) bool {
+	if strings.HasSuffix(imgPath, "favicon.ico") {
+		return true
+	}
+
+	return false
 }
 
 func main() {
