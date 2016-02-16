@@ -14,7 +14,7 @@
 7. [validator](https://github.com/go-playground/validator.git)
 
 #### 编译方法
-因为外部模块有部分依赖地址更换，因此修改了引用模块的依赖，全部整理在该项目中，该项目代码是完整的，直接可以用的。
+因为外部模块有部分依赖地址无效，因此修改为有效的依赖地址，并且全部整理在该项目中，该项目代码是完整的，不需要重新下载其他代码，直接可以用的。
 ```bash
 export GOPATH=$PWD
 git clone https://github.com/yalay/go-thumbnail.git src
