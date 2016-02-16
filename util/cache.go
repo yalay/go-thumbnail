@@ -1,11 +1,11 @@
 package util
 
 import (
+	"crypto/md5"
 	"fmt"
 	"image"
 	"image/jpeg"
 	"io/ioutil"
-	"net/url"
 	"os"
 	"time"
 )
@@ -59,7 +59,7 @@ func loadCache() {
 }
 
 func genCacheName(imgPath, imgArg string) string {
-	return fmt.Sprintf("%s", url.QueryEscape(imgPath+imgArg))
+	return fmt.Sprintf("%x", md5.Sum([]byte(imgPath+imgArg)))
 }
 
 func run() {
