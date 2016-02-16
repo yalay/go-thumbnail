@@ -1,11 +1,11 @@
 package util
 
 import (
-	"crypto/md5"
 	"fmt"
 	"image"
 	"image/jpeg"
 	"io/ioutil"
+	"net/url"
 	"os"
 	"time"
 )
@@ -18,17 +18,28 @@ func init() {
 	go run()
 }
 
-func getCacheImg(imgName string) (img image.Image, err error) {
-	file, err := os.Open(CacheRoot + imgName)
+func WriteCache(imgPath, imgArg string, img image.Image) {
+	cacheName := genCacheName(imgPath, imgArg)
+	cacheFile, err := os.Create(CacheRoot + cacheName)
 	if err != nil {
+		fmt.Printf("WriteCache err:%v", err)
 		return
 	}
-	defer file.Close()
-	img, _, err = image.Decode(file)
-	return
+	defer cacheFile.Close()
+	jpeg.Encode(cacheFile, img, nil)
+	imgCache.Add(cacheName)
 }
 
-// xxx.jpg.pure.100x200
+func FindInCache(imgPath, imgArg string) ([]byte, error) {
+	cacheName := genCacheName(imgPath, imgArg)
+	if !imgCache.Contains(cacheName) {
+		return nil, nil
+	}
+
+	return ioutil.ReadFile(CacheRoot + cacheName)
+}
+
+// %2FPure%2F22.jpg100x100
 func loadCache() {
 	newImgCache := NewSet()
 	if _, err := os.Stat(CacheRoot); err != nil {
@@ -46,33 +57,8 @@ func loadCache() {
 	imgCache = newImgCache
 }
 
-func WriteCache(imgPath, imgArg string, img image.Image) {
-	cacheName := genCacheName(imgPath, imgArg)
-	cacheFile, err := os.Create(CacheRoot + cacheName)
-	if err != nil {
-		fmt.Printf("WriteCache err:%v", err)
-		return
-	}
-	defer cacheFile.Close()
-	jpeg.Encode(cacheFile, img, nil)
-	imgCache.Add(cacheName)
-}
-
 func genCacheName(imgPath, imgArg string) string {
-	return fmt.Sprintf("%x", md5.Sum([]byte(imgPath+imgArg)))
-}
-
-func FindInCache(imgPath, imgArg string) image.Image {
-	cacheName := genCacheName(imgPath, imgArg)
-	if !imgCache.Contains(cacheName) {
-		return nil
-	}
-
-	img, err := getCacheImg(cacheName)
-	if err != nil {
-		return nil
-	}
-	return img
+	return fmt.Sprintf("%s", url.QueryEscape(imgPath+imgArg))
 }
 
 func run() {

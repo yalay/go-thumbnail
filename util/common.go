@@ -2,6 +2,7 @@ package util
 
 import (
 	"image"
+	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
@@ -15,6 +16,10 @@ func LoadImage(imgPath string) (img image.Image, err error) {
 	defer file.Close()
 	img, _, err = image.Decode(file)
 	return
+}
+
+func LoadFile(imgPath string) ([]byte, error) {
+	return ioutil.ReadFile(ImgRoot + imgPath)
 }
 
 func ParseImgArg(imgArg string) (uint, uint) {
