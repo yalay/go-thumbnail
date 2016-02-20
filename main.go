@@ -85,5 +85,5 @@ func main() {
 
 	router := gin.Default()
 	router.GET("/*path", imageHandler)
-	router.Run(":6789")
+	router.Run(":" + util.ServePort)
 }
