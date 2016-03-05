@@ -2,6 +2,7 @@ package util
 
 import (
 	"image"
+	_ "image/png"
 	"io/ioutil"
 	"os"
 	"strconv"

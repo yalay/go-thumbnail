@@ -11,7 +11,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// http://xxx.com/160214/22.jpg?s=100x200
+const (
+	allowedRefer = "127.0.0.1"
+)
+
+// http://127.0.0.1:6789/pure/22.jpg
 func imageHandler(context *gin.Context) {
 	imgPath := context.Param("path")
 	size := context.Query("s")
@@ -28,12 +32,23 @@ func imageHandler(context *gin.Context) {
 		return
 	}
 
-	// 无size指定，默认为原图大小
-	if size == "" {
+	if context.Request == nil {
+		context.String(http.StatusForbidden, "request forbidden")
+		return
+	}
+
+	if size != "" {
+		rspThumbnailImg(imgPath, size, context)
+		return
+	}
+
+	referUrl := context.Request.Referer()
+	if strings.Contains(referUrl, allowedRefer) {
 		rspOriginImg(imgPath, context)
 	} else {
-		rspThumbnailImg(imgPath, size, context)
+		rspWaterMarkImg(imgPath, context)
 	}
+
 	return
 }
 
@@ -70,6 +85,15 @@ func rspThumbnailImg(imgPath, size string, context *gin.Context) {
 	jpeg.Encode(buff, dstImg, nil)
 	context.Data(http.StatusOK, "image/jpeg", buff.Bytes())
 	return
+}
+
+func rspWaterMarkImg(imgPath string, context *gin.Context) {
+	waterBuff, err := util.WaterMark(imgPath)
+	if err != nil {
+		context.String(http.StatusNotFound, "Water mark error:%v", err)
+	} else {
+		context.Data(http.StatusOK, "image/jpeg", waterBuff.Bytes())
+	}
 }
 
 func skipFavicon(imgPath string) bool {

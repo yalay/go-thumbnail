@@ -6,15 +6,17 @@ import (
 )
 
 var (
-	CacheRoot = "./cache/"
-	ImgRoot   = "./public/"
-	ServePort = "6789"
+	CacheRoot    = "./cache/"
+	ImgRoot      = "./public/"
+	ServePort    = "6789"
+	WaterMarkImg = "water.png"
 )
 
 func init() {
-	flag.StringVar(&CacheRoot, "cPath", "./cache/", "cache path")
-	flag.StringVar(&ImgRoot, "sPath", "./public/", "source image path")
-	flag.StringVar(&ServePort, "port", "6789", "server port")
+	flag.StringVar(&CacheRoot, "cPath", "./cache/", "Cache path")
+	flag.StringVar(&ImgRoot, "sPath", "./public/", "Source image path")
+	flag.StringVar(&WaterMarkImg, "wImg", "water.png", "Water mark image")
+	flag.StringVar(&ServePort, "port", "6789", "Server port")
 	flag.Parse()
 
 	if !strings.HasSuffix(ImgRoot, "/") {
