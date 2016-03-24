@@ -1,14 +1,12 @@
 package util
 
 import (
-	"bytes"
 	"image"
 	"image/draw"
-	"image/jpeg"
 )
 
 // 加水印
-func WaterMark(imgPath string) (*bytes.Buffer, error) {
+func WaterMark(imgPath string) (image.Image, error) {
 	srcImg, err := LoadImage(imgPath)
 	if err != nil {
 		return nil, err
@@ -26,8 +24,5 @@ func WaterMark(imgPath string) (*bytes.Buffer, error) {
 	newImg := image.NewNRGBA(srcBounds)
 	draw.Draw(newImg, srcBounds, srcImg, image.ZP, draw.Src)
 	draw.Draw(newImg, markImg.Bounds().Add(offset), markImg, image.ZP, draw.Over)
-
-	buff := &bytes.Buffer{}
-	jpeg.Encode(buff, newImg, nil)
-	return buff, nil
+	return newImg, nil
 }

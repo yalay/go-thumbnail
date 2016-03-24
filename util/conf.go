@@ -10,6 +10,7 @@ var (
 	ImgRoot      = "./public/"
 	ServePort    = "6789"
 	WaterMarkImg = "water.png"
+	WaterSize    = "1x1" // 1x1用来标记添加水印
 )
 
 func init() {
