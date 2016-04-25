@@ -15,24 +15,23 @@ const (
 	allowedRefer = "127.0.0.1"
 )
 
+var (
+	spiders = []string{"Baiduspider", "Googlebot", "360Spider"}
+)
+
 // http://127.0.0.1:6789/pure/22.jpg
 func imageHandler(context *gin.Context) {
 	imgPath := context.Param("path")
 	size := context.Query("s")
 
-	if skipFavicon(imgPath) {
-		context.String(http.StatusNotFound, "skip favicon")
+	if doSkip(imgPath, context) {
+		context.String(http.StatusOK, "skip")
 		return
 	}
 
 	cacheBuff := util.FindInCache(imgPath, size)
 	if len(cacheBuff) > 0 {
 		context.Data(http.StatusOK, "image/jpeg", cacheBuff)
-		return
-	}
-
-	if context.Request == nil {
-		context.String(http.StatusForbidden, "request forbidden")
 		return
 	}
 
@@ -107,9 +106,22 @@ func rspWaterMarkImg(imgPath string, context *gin.Context) {
 
 }
 
-func skipFavicon(imgPath string) bool {
+func doSkip(imgPath string, context *gin.Context) bool {
+	// 忽略favicon
 	if strings.HasSuffix(imgPath, "favicon.ico") {
 		return true
+	}
+
+	req := context.Request
+	if req == nil {
+		return true
+	}
+
+	ua := req.UserAgent()
+	for _, spider := range spiders {
+		if strings.Contains(ua, spider) {
+			return true
+		}
 	}
 
 	return false
