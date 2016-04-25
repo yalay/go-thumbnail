@@ -6,12 +6,7 @@ import (
 )
 
 // 加水印
-func WaterMark(imgPath string) (image.Image, error) {
-	srcImg, err := LoadImage(imgPath)
-	if err != nil {
-		return nil, err
-	}
-
+func WaterMark(srcImg image.Image) (image.Image, error) {
 	// 读取水印图片
 	markImg, err := LoadImage(WaterMarkImg)
 	if err != nil {

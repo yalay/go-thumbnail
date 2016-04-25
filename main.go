@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"image"
 	"image/jpeg"
 	"net/http"
 	"strings"
@@ -49,26 +50,16 @@ func rspOriginImg(imgPath string, context *gin.Context) {
 }
 
 func rspThumbnailImg(imgPath, size string, context *gin.Context) {
-	dstWidth, dstHeight := util.ParseImgArg(size)
-	if dstHeight == 0 || dstWidth == 0 {
-		context.String(http.StatusForbidden, "size forbidden")
+	thumbImg := getThumbnailImg(imgPath, size)
+	if thumbImg == nil {
+		context.String(http.StatusNotFound, "Thumbnail fail:%s-%s", imgPath, size)
 		return
 	}
-
-	srcImg, err := util.LoadImage(imgPath)
-	if err != nil {
-		fmt.Printf("[GIN] LoadImage error:%v\n", err)
-		context.String(http.StatusNotFound, "LoadImage error:%v", err)
-		return
-	}
-
-	thumbImg := util.Thumbnail(dstWidth, dstHeight, srcImg)
-	dstImg := util.CropImg(thumbImg, int(dstWidth), int(dstHeight))
 	buff := &bytes.Buffer{}
-	jpeg.Encode(buff, dstImg, nil)
+	jpeg.Encode(buff, thumbImg, nil)
 	context.Data(http.StatusOK, "image/jpeg", buff.Bytes())
 
-	go util.WriteCache(imgPath, size, dstImg)
+	go util.WriteCache(imgPath, size, thumbImg)
 	return
 }
 
@@ -79,7 +70,13 @@ func rspWaterMarkImg(imgPath string, context *gin.Context) {
 		return
 	}
 
-	waterImg, err := util.WaterMark(imgPath)
+	thumbImg := getThumbnailImg(imgPath, util.ExtImgSize)
+	if thumbImg == nil {
+		context.String(http.StatusNotFound, "Warter thumbnail fail:%s", imgPath)
+		return
+	}
+
+	waterImg, err := util.WaterMark(thumbImg)
 	if err != nil {
 		context.String(http.StatusNotFound, "Water mark error:%v", err)
 	} else {
@@ -89,7 +86,22 @@ func rspWaterMarkImg(imgPath string, context *gin.Context) {
 
 		go util.WriteCache(imgPath, util.WaterSize, waterImg)
 	}
+}
 
+func getThumbnailImg(imgPath, size string) image.Image {
+	dstWidth, dstHeight := util.ParseImgArg(size)
+	if dstHeight == 0 || dstWidth == 0 {
+		return nil
+	}
+
+	srcImg, err := util.LoadImage(imgPath)
+	if err != nil {
+		fmt.Printf("[GIN] LoadImage error:%v\n", err)
+		return nil
+	}
+
+	thumbImg := util.Thumbnail(dstWidth, dstHeight, srcImg)
+	return util.CropImg(thumbImg, int(dstWidth), int(dstHeight))
 }
 
 func doSkip(imgPath string, context *gin.Context) bool {

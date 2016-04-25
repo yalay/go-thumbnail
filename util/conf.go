@@ -9,6 +9,7 @@ var (
 	CacheRoot    = "./cache/"
 	ImgRoot      = "./public/"
 	ServePort    = "6789"
+	ExtImgSize   = "200x300" // 外链图片尺寸大小
 	WaterMarkImg = "water.png"
 	WaterSize    = "1x1" // 1x1用来标记添加水印
 	RedirectUrl  = "http://localhost"
