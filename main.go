@@ -11,14 +11,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const (
-	allowedRefer = "127.0.0.1"
-)
-
-var (
-	spiders = []string{"Baiduspider", "Googlebot", "360Spider"}
-)
-
 // http://127.0.0.1:6789/pure/22.jpg
 func imageHandler(context *gin.Context) {
 	imgPath := context.Param("path")
@@ -41,7 +33,7 @@ func imageHandler(context *gin.Context) {
 	}
 
 	referUrl := context.Request.Referer()
-	if strings.Contains(referUrl, allowedRefer) {
+	if strings.Contains(referUrl, util.AllowedRefer) {
 		rspOriginImg(imgPath, context)
 	} else {
 		rspWaterMarkImg(imgPath, context)
@@ -50,14 +42,9 @@ func imageHandler(context *gin.Context) {
 	return
 }
 
+// 原图获取跳转到img服务器
 func rspOriginImg(imgPath string, context *gin.Context) {
-	imgBuff, err := util.LoadFile(imgPath)
-	if err != nil {
-		fmt.Printf("[GIN] LoadFile error:%v\n", err)
-		context.String(http.StatusNotFound, "LoadFile error:%v", err)
-	} else {
-		context.Data(http.StatusOK, "image/jpeg", imgBuff)
-	}
+	context.Redirect(http.StatusFound, util.RedirectUrl+imgPath)
 	return
 }
 
@@ -88,7 +75,6 @@ func rspThumbnailImg(imgPath, size string, context *gin.Context) {
 func rspWaterMarkImg(imgPath string, context *gin.Context) {
 	cacheBuff := util.FindInCache(imgPath, util.WaterSize)
 	if len(cacheBuff) > 0 {
-		// 用状态码201表示当前从缓存中读取的数据,便于日志直接查看
 		context.Data(http.StatusOK, "image/jpeg", cacheBuff)
 		return
 	}
@@ -111,15 +97,15 @@ func doSkip(imgPath string, context *gin.Context) bool {
 	if strings.HasSuffix(imgPath, "favicon.ico") {
 		return true
 	}
-
 	req := context.Request
 	if req == nil {
 		return true
 	}
 
 	ua := req.UserAgent()
-	for _, spider := range spiders {
+	for _, spider := range util.Spiders {
 		if strings.Contains(ua, spider) {
+			fmt.Printf("[GIN] spider skip:%s\n", ua)
 			return true
 		}
 	}
