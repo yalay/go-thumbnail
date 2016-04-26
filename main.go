@@ -123,6 +123,7 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 
 	router := gin.Default()
+	router.Use(util.Counter())
 	router.GET("/*path", imageHandler)
 	router.Run(":" + util.ServePort)
 }
