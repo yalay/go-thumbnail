@@ -16,7 +16,7 @@ var (
 )
 
 var (
-	Spiders      = []string{"Baiduspider", "Googlebot", "360Spider", "Chrome"}
+	Spiders      = []string{"Baiduspider", "Googlebot", "360Spider"}
 	AllowedRefer = "127.0.0.1"
 )
 

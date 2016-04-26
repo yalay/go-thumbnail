@@ -33,13 +33,7 @@ func imageHandler(context *gin.Context) {
 		return
 	}
 
-	referUrl := context.Request.Referer()
-	if strings.Contains(referUrl, util.AllowedRefer) {
-		rspOriginImg(imgPath, context)
-	} else {
-		rspWaterMarkImg(imgPath, context)
-	}
-
+	rspOriginImg(imgPath, context)
 	return
 }
 
