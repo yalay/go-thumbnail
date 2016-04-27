@@ -7,8 +7,8 @@ import (
 	"image"
 )
 
-// 缩略图按照指定的最小长宽不失真缩放
-func Thumbnail(minWidth, minHeight uint, img image.Image) image.Image {
+// 缩略图按照指定的宽和高非失真缩放裁剪
+func ThumbnailCrop(minWidth, minHeight uint, img image.Image) image.Image {
 	origBounds := img.Bounds()
 	origWidth := uint(origBounds.Dx())
 	origHeight := uint(origBounds.Dy())
@@ -35,5 +35,12 @@ func Thumbnail(minWidth, minHeight uint, img image.Image) image.Image {
 		}
 		newHeight = minHeight
 	}
-	return resize.Resize(newWidth, newHeight, img, resize.Lanczos3)
+
+	thumbImg := resize.Resize(newWidth, newHeight, img, resize.Lanczos3)
+	return CropImg(thumbImg, int(minWidth), int(minHeight))
+}
+
+// 简单的缩放,指定最大宽和高
+func ThumbnailSimple(maxWidth, maxHeight uint, img image.Image) image.Image {
+	return resize.Thumbnail(maxWidth, maxHeight, img, resize.Lanczos3)
 }

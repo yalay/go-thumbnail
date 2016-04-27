@@ -22,14 +22,14 @@ func imageHandler(context *gin.Context) {
 		return
 	}
 
-	cacheBuff := util.FindInCache(imgPath, size)
-	if len(cacheBuff) > 0 {
-		context.Data(http.StatusOK, "image/jpeg", cacheBuff)
+	if size != "" {
+		rspThumbnailImg(imgPath, size, true, context)
 		return
 	}
 
-	if size != "" {
-		rspThumbnailImg(imgPath, size, context)
+	referUrl := context.Request.Referer()
+	if !strings.Contains(referUrl, util.AllowedRefer) {
+		rspThumbnailImg(imgPath, util.ExtImgSize, false, context)
 		return
 	}
 
@@ -54,8 +54,14 @@ func rspOriginImg(imgPath string, context *gin.Context) {
 	return
 }
 
-func rspThumbnailImg(imgPath, size string, context *gin.Context) {
-	thumbImg := getThumbnailImg(imgPath, size)
+func rspThumbnailImg(imgPath, size string, doCrop bool, context *gin.Context) {
+	cacheBuff := util.FindInCache(imgPath, size)
+	if len(cacheBuff) > 0 {
+		context.Data(http.StatusOK, "image/jpeg", cacheBuff)
+		return
+	}
+
+	thumbImg := getThumbnailImg(imgPath, size, doCrop)
 	if thumbImg == nil {
 		context.String(http.StatusNotFound, "Thumbnail fail:%s-%s", imgPath, size)
 		return
@@ -75,7 +81,7 @@ func rspWaterMarkImg(imgPath string, context *gin.Context) {
 		return
 	}
 
-	thumbImg := getThumbnailImg(imgPath, util.ExtImgSize)
+	thumbImg := getThumbnailImg(imgPath, util.ExtImgSize, true)
 	if thumbImg == nil {
 		context.String(http.StatusNotFound, "Warter thumbnail fail:%s", imgPath)
 		return
@@ -93,7 +99,7 @@ func rspWaterMarkImg(imgPath string, context *gin.Context) {
 	}
 }
 
-func getThumbnailImg(imgPath, size string) image.Image {
+func getThumbnailImg(imgPath, size string, doCrop bool) image.Image {
 	dstWidth, dstHeight := util.ParseImgArg(size)
 	if dstHeight == 0 || dstWidth == 0 {
 		return nil
@@ -105,8 +111,15 @@ func getThumbnailImg(imgPath, size string) image.Image {
 		return nil
 	}
 
-	thumbImg := util.Thumbnail(dstWidth, dstHeight, srcImg)
-	return util.CropImg(thumbImg, int(dstWidth), int(dstHeight))
+	
+	if doCrop {
+		return util.ThumbnailCrop(dstWidth, dstHeight, srcImg)
+	} else {
+		return util.ThumbnailSimple(dstWidth, dstHeight, srcImg)
+	}
+
+	return nil
+	
 }
 
 func doSkip(imgPath string, context *gin.Context) bool {
