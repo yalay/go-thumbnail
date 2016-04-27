@@ -37,9 +37,20 @@ func imageHandler(context *gin.Context) {
 	return
 }
 
-// 原图获取跳转到img服务器
+// 原图获取跳转到img服务器或者从本地读取
 func rspOriginImg(imgPath string, context *gin.Context) {
-	context.Redirect(http.StatusFound, util.RedirectUrl+imgPath)
+	if strings.HasPrefix(util.RedirectUrl, "http://") {
+		context.Redirect(http.StatusFound, util.RedirectUrl+imgPath)
+	} else {
+		imgBuff, err := util.LoadFile(imgPath)
+		if err != nil {
+			fmt.Printf("[GIN] LoadFile error:%v\n", err)
+			context.String(http.StatusNotFound, "LoadFile error:%v", err)
+		} else {
+			context.Data(http.StatusOK, "image/jpeg", imgBuff)
+		}
+	}
+
 	return
 }
 
