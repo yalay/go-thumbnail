@@ -6,6 +6,7 @@ import (
 	"image"
 	"image/jpeg"
 	"net/http"
+	"strings"
 	"util"
 
 	"github.com/gin-gonic/gin"
@@ -16,9 +17,15 @@ func imageHandler(context *gin.Context) {
 	imgPath := context.Param("path")
 	size := context.Query("s")
 
+	if !strings.HasSuffix(imgPath, "jpg") &&
+		!strings.HasSuffix(imgPath, "jpeg") &&
+		!strings.HasSuffix(imgPath, "png") {
+		context.String(http.StatusNotFound, "path error")
+		return
+	}
+
 	if size != "" {
 		rspThumbnailImg(imgPath, size, context)
-		return
 	} else {
 		rspOriginImg(imgPath, context)
 	}
