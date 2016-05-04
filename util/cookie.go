@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -22,6 +23,9 @@ func Counter() gin.HandlerFunc {
 			}
 			cnt, _ := strconv.Atoi(cookie.Value)
 			cnt++
+			if cnt > 64 {
+				fmt.Printf("[GIN] cookie cnt:%d", cnt)
+			}
 			cookie.Value = strconv.Itoa(cnt)
 			http.SetCookie(context.Writer, cookie)
 		} else {
