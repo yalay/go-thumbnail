@@ -7,6 +7,7 @@ import (
 	"image/jpeg"
 	"net/http"
 	"strings"
+	"time"
 	"util"
 
 	"github.com/gin-gonic/gin"
@@ -19,6 +20,11 @@ func imageHandler(context *gin.Context) {
 
 	if doSkip(imgPath, context) {
 		context.String(http.StatusOK, "skip")
+		return
+	}
+
+	if !doModifiedSince(context) {
+		context.String(http.StatusNotModified, "not modified")
 		return
 	}
 
@@ -35,7 +41,7 @@ func imageHandler(context *gin.Context) {
 func rspOriginImg(imgPath string, context *gin.Context) {
 	referUrl := context.Request.Referer()
 	if !strings.Contains(referUrl, util.AllowedRefer) {
-		imgPath = imgPath + "?s="+ util.ExtImgSize
+		imgPath = imgPath + "?s=" + util.ExtImgSize
 	}
 	context.Redirect(http.StatusFound, util.RedirectUrl+imgPath)
 	return
@@ -119,6 +125,18 @@ func doSkip(imgPath string, context *gin.Context) bool {
 		}
 	}
 
+	return false
+}
+
+func doModifiedSince(context *gin.Context) bool {
+	lastTime, err := time.Parse(http.TimeFormat, context.Request.Header.Get("If-Modified-Since"))
+	if err != nil {
+		return true
+	}
+
+	if lastTime.Add(4 * time.Hour).After(time.Now()) {
+		return true
+	}
 	return false
 }
 
