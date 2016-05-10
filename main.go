@@ -134,7 +134,7 @@ func doModifiedSince(context *gin.Context) bool {
 		return true
 	}
 
-	if lastTime.Add(4 * time.Hour).After(time.Now()) {
+	if lastTime.Add(4 * time.Hour).Before(time.Now()) {
 		return true
 	}
 	return false
