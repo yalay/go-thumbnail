@@ -38,7 +38,7 @@ func rspOriginImg(imgPath string, context *gin.Context) {
 		fmt.Printf("[GIN] LoadFile error:%v\n", err)
 		context.String(http.StatusNotFound, "LoadFile error:%v", err)
 	} else {
-		context.Data(http.StatusOK, "image/jpeg", imgBuff)
+		rspCacheControl(imgBuff, context)
 	}
 
 	return
@@ -48,7 +48,7 @@ func rspOriginImg(imgPath string, context *gin.Context) {
 func rspThumbnailImg(imgPath, size string, context *gin.Context) {
 	cacheBuff := util.FindInCache(imgPath, size)
 	if len(cacheBuff) > 0 {
-		context.Data(http.StatusOK, "image/jpeg", cacheBuff)
+		rspCacheControl(cacheBuff, context)
 		return
 	}
 
@@ -66,7 +66,7 @@ func rspThumbnailImg(imgPath, size string, context *gin.Context) {
 
 	buff := &bytes.Buffer{}
 	jpeg.Encode(buff, thumbImg, nil)
-	context.Data(http.StatusOK, "image/jpeg", buff.Bytes())
+	rspCacheControl(buff.Bytes(), context)
 
 	go util.WriteCache(imgPath, size, thumbImg)
 	return
@@ -89,7 +89,18 @@ func getThumbnailImg(imgPath, size string, doCrop bool) image.Image {
 	} else {
 		return util.ThumbnailSimple(dstWidth, dstHeight, srcImg)
 	}
+}
 
+func rspCacheControl(data []byte, context *gin.Context) {
+	eTag := string(util.Md5Sum(data))
+	reqTag := context.Request.Header.Get("If-None-Match")
+	if reqTag != "" && reqTag == eTag {
+		context.Status(http.StatusNotModified)
+	} else {
+		context.Header("ETag", eTag)
+		context.Header("Cache-Control", "public, max-age=86400")
+		context.Data(http.StatusOK, "image/jpeg", data)
+	}
 }
 
 func main() {
