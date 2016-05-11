@@ -54,7 +54,7 @@ func rspThumbnailImg(imgPath, size string, context *gin.Context) {
 
 	var thumbImg image.Image
 	referUrl := context.Request.Referer()
-	if !strings.Contains(referUrl, util.AllowedRefer) {
+	if strings.Contains(referUrl, util.AllowedRefer) {
 		thumbImg = getThumbnailImg(imgPath, size, true)
 	} else {
 		thumbImg = getThumbnailImg(imgPath, size, false)
