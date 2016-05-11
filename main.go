@@ -6,6 +6,7 @@ import (
 	"image"
 	"image/jpeg"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 	"util"
@@ -28,83 +29,61 @@ func imageHandler(context *gin.Context) {
 		return
 	}
 
-	if size != "" {
-		rspThumbnailImg(imgPath, size, context)
-		return
-	}
-
-	rspOriginImg(imgPath, context)
-	return
-}
-
-// 原图获取跳转到img服务器
-func rspOriginImg(imgPath string, context *gin.Context) {
 	referUrl := context.Request.Referer()
-	if !strings.Contains(referUrl, util.AllowedRefer) {
-		imgPath = imgPath + "?s=" + util.ExtImgSize
+	if size != "" {
+		imgPath = imgPath + "?s=" + size
+	} else {
+		if !strings.Contains(referUrl, util.AllowedRefer) {
+			imgPath = imgPath + "?s=" + util.ExtImgSize
+		}
 	}
-	context.Redirect(http.StatusFound, util.RedirectUrl+imgPath)
+
+	rspOriginImg(util.RedirectUrl+imgPath, context)
 	return
 }
 
-func rspThumbnailImg(imgPath, size string, context *gin.Context) {
-	cacheBuff := util.FindInCache(imgPath, size)
-	if len(cacheBuff) > 0 {
-		context.Data(http.StatusOK, "image/jpeg", cacheBuff)
+// 原图本地获取或者跳转到img服务器
+func rspOriginImg(imgPath string, context *gin.Context) {
+	imgUrl, err := url.Parse(imgPath)
+	if err != nil || imgUrl == nil {
+		context.String(http.StatusNotFound, "404")
 		return
 	}
 
-	thumbImg := getThumbnailImg(imgPath, size)
-	if thumbImg == nil {
-		context.String(http.StatusNotFound, "Thumbnail fail:%s-%s", imgPath, size)
+	if len(imgUrl.Host) > 0 {
+		context.Redirect(http.StatusFound, imgPath)
 		return
 	}
+
 	buff := &bytes.Buffer{}
+	thumbImg := getThumbnailImg(imgUrl)
 	jpeg.Encode(buff, thumbImg, nil)
 	context.Data(http.StatusOK, "image/jpeg", buff.Bytes())
 
-	go util.WriteCache(imgPath, size, thumbImg)
-	return
 }
 
-func rspWaterMarkImg(imgPath string, context *gin.Context) {
-	cacheBuff := util.FindInCache(imgPath, util.WaterSize)
-	if len(cacheBuff) > 0 {
-		context.Data(http.StatusOK, "image/jpeg", cacheBuff)
-		return
-	}
-
-	thumbImg := getThumbnailImg(imgPath, util.ExtImgSize)
-	if thumbImg == nil {
-		context.String(http.StatusNotFound, "Warter thumbnail fail:%s", imgPath)
-		return
-	}
-
-	waterImg, err := util.WaterMark(thumbImg)
-	if err != nil {
-		context.String(http.StatusNotFound, "Water mark error:%v", err)
-	} else {
-		waterBuff := &bytes.Buffer{}
-		jpeg.Encode(waterBuff, waterImg, nil)
-		context.Data(http.StatusOK, "image/jpeg", waterBuff.Bytes())
-
-		go util.WriteCache(imgPath, util.WaterSize, waterImg)
-	}
-}
-
-func getThumbnailImg(imgPath, size string) image.Image {
-	dstWidth, dstHeight := util.ParseImgArg(size)
-	if dstHeight == 0 || dstWidth == 0 {
+func getThumbnailImg(imgUrl *url.URL) image.Image {
+	if imgUrl == nil {
 		return nil
 	}
 
-	srcImg, err := util.LoadImage(imgPath)
+	srcImg, err := util.LoadImage(imgUrl.Path)
 	if err != nil {
 		fmt.Printf("[GIN] LoadImage error:%v\n", err)
 		return nil
 	}
 
-	return util.ThumbnailCrop(dstWidth, dstHeight, srcImg)
+	imgValues, _ := url.ParseQuery(imgUrl.RawQuery)
+	size := imgValues.Get("s")
+	if size == "" {
+		return srcImg
+	} else {
+		dstWidth, dstHeight := util.ParseImgArg(size)
+		if dstHeight == 0 || dstWidth == 0 {
+			return srcImg
+		}
+		return util.ThumbnailCrop(dstWidth, dstHeight, srcImg)
+	}
 }
 
 func doSkip(imgPath string, context *gin.Context) bool {
