@@ -44,6 +44,7 @@ func rspOriginImg(imgPath string, context *gin.Context) {
 	return
 }
 
+// 只有指定Refer才允许crop
 func rspThumbnailImg(imgPath, size string, context *gin.Context) {
 	cacheBuff := util.FindInCache(imgPath, size)
 	if len(cacheBuff) > 0 {
@@ -51,11 +52,18 @@ func rspThumbnailImg(imgPath, size string, context *gin.Context) {
 		return
 	}
 
-	thumbImg := getThumbnailImg(imgPath, size)
+	var thumbImg image.Image
+	referUrl := context.Request.Referer()
+	if !strings.Contains(referUrl, util.AllowedRefer) {
+		thumbImg = getThumbnailImg(imgPath, size, true)
+	} else {
+		thumbImg = getThumbnailImg(imgPath, size, false)
+	}
 	if thumbImg == nil {
 		context.String(http.StatusNotFound, "Thumbnail fail:%s-%s", imgPath, size)
 		return
 	}
+
 	buff := &bytes.Buffer{}
 	jpeg.Encode(buff, thumbImg, nil)
 	context.Data(http.StatusOK, "image/jpeg", buff.Bytes())
@@ -64,7 +72,7 @@ func rspThumbnailImg(imgPath, size string, context *gin.Context) {
 	return
 }
 
-func getThumbnailImg(imgPath, size string) image.Image {
+func getThumbnailImg(imgPath, size string, doCrop bool) image.Image {
 	dstWidth, dstHeight := util.ParseImgArg(size)
 	if dstHeight == 0 || dstWidth == 0 {
 		return nil
@@ -76,7 +84,11 @@ func getThumbnailImg(imgPath, size string) image.Image {
 		return nil
 	}
 
-	return util.ThumbnailSimple(dstWidth, dstHeight, srcImg)
+	if doCrop {
+		return util.ThumbnailCrop(dstWidth, dstHeight, srcImg)
+	} else {
+		return util.ThumbnailSimple(dstWidth, dstHeight, srcImg)
+	}
 
 }
 
