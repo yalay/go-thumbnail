@@ -7,6 +7,7 @@ import (
 	"image/jpeg"
 	"net/http"
 	"strings"
+	"time"
 	"util"
 
 	"github.com/gin-gonic/gin"
@@ -20,7 +21,7 @@ func imageHandler(context *gin.Context) {
 	if !strings.HasSuffix(imgPath, "jpg") &&
 		!strings.HasSuffix(imgPath, "jpeg") &&
 		!strings.HasSuffix(imgPath, "png") {
-		context.String(http.StatusNotFound, "path error")
+		context.Status(http.StatusNotFound)
 		return
 	}
 
@@ -36,7 +37,7 @@ func rspOriginImg(imgPath string, context *gin.Context) {
 	imgBuff, err := util.LoadFile(imgPath)
 	if err != nil {
 		fmt.Printf("[GIN] LoadFile error:%v\n", err)
-		context.String(http.StatusNotFound, "LoadFile error:%v", err)
+		context.Status(http.StatusNotFound)
 	} else {
 		rspCacheControl(imgBuff, context)
 	}
@@ -95,10 +96,16 @@ func rspCacheControl(data []byte, context *gin.Context) {
 	eTag := string(util.Md5Sum(data))
 	reqTag := context.Request.Header.Get("If-None-Match")
 	if reqTag != "" && reqTag == eTag {
+		context.Header("ETag", eTag)
 		context.Status(http.StatusNotModified)
 	} else {
+		cacheSince := time.Now().Format(http.TimeFormat)
+		cacheUntil := time.Now().AddDate(0, 0, 1).Format(http.TimeFormat)
+
 		context.Header("ETag", eTag)
-		context.Header("Cache-Control", "public, max-age=86400")
+		context.Header("Cache-Control", "max-age=86400")
+		context.Header("Last-Modified", cacheSince)
+		context.Header("Expires", cacheUntil)
 		context.Data(http.StatusOK, "image/jpeg", data)
 	}
 }
