@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"image"
 	"image/jpeg"
 	"net/http"
@@ -20,7 +19,7 @@ func imageHandler(context *gin.Context) {
 	if !strings.HasSuffix(imgPath, "jpg") &&
 		!strings.HasSuffix(imgPath, "jpeg") &&
 		!strings.HasSuffix(imgPath, "png") {
-		context.String(http.StatusNotFound, "path error")
+		context.Status(http.StatusNotFound)
 		return
 	}
 
@@ -35,8 +34,8 @@ func imageHandler(context *gin.Context) {
 func rspOriginImg(imgPath string, context *gin.Context) {
 	imgBuff, err := util.LoadFile(imgPath)
 	if err != nil {
-		fmt.Printf("[GIN] LoadFile error:%v\n", err)
-		context.String(http.StatusNotFound, "LoadFile error:%v", err)
+		util.Log("[GIN] LoadFile error:" + err.Error())
+		context.Status(http.StatusNotFound)
 	} else {
 		rspCacheControl(imgBuff, context)
 	}
@@ -80,7 +79,7 @@ func getThumbnailImg(imgPath, size string, doCrop bool) image.Image {
 
 	srcImg, err := util.LoadImage(imgPath)
 	if err != nil {
-		fmt.Printf("[GIN] LoadImage error:%v\n", err)
+		util.Log("[GIN] LoadImage error:" + err.Error())
 		return nil
 	}
 
@@ -106,7 +105,8 @@ func rspCacheControl(data []byte, context *gin.Context) {
 func main() {
 	gin.SetMode(gin.ReleaseMode)
 
-	router := gin.Default()
+	router := gin.New()
+	router.Use(gin.LoggerWithWriter(util.GetLogBuf()), gin.Recovery())
 	router.GET("/*path", imageHandler)
 	router.Run(":" + util.ServePort)
 }
