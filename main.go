@@ -6,6 +6,7 @@ import (
 	"image/jpeg"
 	"net/http"
 	"strings"
+	"time"
 	"util"
 
 	"github.com/gin-gonic/gin"
@@ -94,10 +95,16 @@ func rspCacheControl(data []byte, context *gin.Context) {
 	eTag := string(util.Md5Sum(data))
 	reqTag := context.Request.Header.Get("If-None-Match")
 	if reqTag != "" && reqTag == eTag {
+		context.Header("ETag", eTag)
 		context.Status(http.StatusNotModified)
 	} else {
+		cacheSince := time.Now().Format(http.TimeFormat)
+		cacheUntil := time.Now().AddDate(0, 0, 1).Format(http.TimeFormat)
+
 		context.Header("ETag", eTag)
-		context.Header("Cache-Control", "public, max-age=86400")
+		context.Header("Cache-Control", "max-age=86400")
+		context.Header("Last-Modified", cacheSince)
+		context.Header("Expires", cacheUntil)
 		context.Data(http.StatusOK, "image/jpeg", data)
 	}
 }
