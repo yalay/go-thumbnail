@@ -13,6 +13,7 @@ var (
 	WaterMarkImg = "water.png"
 	WaterSize    = "1x1" // 1x1用来标记添加水印
 	RedirectUrl  = ""    // 跳转路径,可以为本地路径
+	LogFile      = "log"
 )
 
 var (
@@ -28,6 +29,7 @@ func init() {
 	flag.StringVar(&RedirectUrl, "rUrl", "", "Redirect url")
 	flag.StringVar(&AllowedRefer, "aRefer", "127.0.0.1", "Allowed refer")
 	flag.StringVar(&ExtImgSize, "eSize", "400x600", "ExtLink Img Size")
+	flag.StringVar(&LogFile, "log", "log", "log file pre name")
 	flag.Parse()
 
 	if !strings.HasSuffix(ImgRoot, "/") {

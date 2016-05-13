@@ -122,8 +122,8 @@ func doModifiedSince(context *gin.Context) bool {
 func main() {
 	gin.SetMode(gin.ReleaseMode)
 
-	router := gin.Default()
-	router.Use(util.Counter())
+	router := gin.New()
+	router.Use(util.Counter(), gin.LoggerWithWriter(util.GetLogBuf()), gin.Recovery())
 	router.GET("/*path", imageHandler)
 	router.Run(":" + util.ServePort)
 }
