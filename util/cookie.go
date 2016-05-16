@@ -15,7 +15,7 @@ const (
 func Counter() gin.HandlerFunc {
 	return func(context *gin.Context) {
 		cookie, err := context.Request.Cookie(cookieKey)
-		if err == nil && cookie.Value != "" {
+		if err == nil && cookie.Path == "/" {
 			cnt, _ := strconv.Atoi(cookie.Value)
 			cnt++
 			cookie.Value = strconv.Itoa(cnt)
