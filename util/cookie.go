@@ -24,7 +24,7 @@ func Counter() gin.HandlerFunc {
 			cnt++
 			cookie.Value = strconv.Itoa(cnt)
 			http.SetCookie(context.Writer, cookie)
-			Log(cookie.Value)
+			Logln("[GIN] cookie value:" + cookie.Value)
 		} else {
 			http.SetCookie(context.Writer, &http.Cookie{
 				Name:    cookieKey,

@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"image"
 	"image/jpeg"
 	"net/http"
@@ -20,12 +19,12 @@ func imageHandler(context *gin.Context) {
 	size := context.Query("s")
 
 	if doSkip(imgPath, context) {
-		context.String(http.StatusOK, "skip")
+		context.Status(http.StatusOK)
 		return
 	}
 
 	if !doModifiedSince(context) {
-		context.String(http.StatusNotModified, "not modified")
+		context.Status(http.StatusNotModified)
 		return
 	}
 
@@ -46,7 +45,7 @@ func imageHandler(context *gin.Context) {
 func rspOriginImg(imgPath string, context *gin.Context) {
 	imgUrl, err := url.Parse(imgPath)
 	if err != nil || imgUrl == nil {
-		context.String(http.StatusNotFound, "404")
+		context.Status(http.StatusNotFound)
 		return
 	}
 
@@ -69,7 +68,7 @@ func getThumbnailImg(imgUrl *url.URL) image.Image {
 
 	srcImg, err := util.LoadImage(imgUrl.Path)
 	if err != nil {
-		fmt.Printf("[GIN] LoadImage error:%v\n", err)
+		util.Logln("[GIN] LoadImage error:" + err.Error())
 		return nil
 	}
 
@@ -99,7 +98,7 @@ func doSkip(imgPath string, context *gin.Context) bool {
 	ua := req.UserAgent()
 	for _, spider := range util.Spiders {
 		if strings.Contains(ua, spider) {
-			fmt.Printf("[GIN] spider skip:%s\n", ua)
+			util.Logln("[GIN] spider skip:" + ua)
 			return true
 		}
 	}

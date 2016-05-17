@@ -23,6 +23,10 @@ func Log(msg string) {
 	logBuffer.WriteString(msg)
 }
 
+func Logln(msg string) {
+	logBuffer.WriteString(msg + "\n")
+}
+
 func writeLog() {
 	for {
 		todady := time.Now().Format("2006-01-02")

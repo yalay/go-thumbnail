@@ -1,7 +1,6 @@
 package util
 
 import (
-	"fmt"
 	"github.com/oliamb/cutter"
 	"image"
 )
@@ -21,7 +20,7 @@ func CropImg(srcImg image.Image, dstWidth, dstHeight int) image.Image {
 		Options: 0, // Accepted Option: Ratio
 	})
 	if err != nil {
-		fmt.Printf("Cannot crop image:", err)
+		Logln("[GIN] Cannot crop image:" + err.Error())
 		return srcImg
 	}
 	return dstImg
