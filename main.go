@@ -28,12 +28,15 @@ func imageHandler(context *gin.Context) {
 		return
 	}
 
-	referUrl := context.Request.Referer()
 	if size != "" {
 		imgPath = imgPath + "?s=" + size
 	} else {
-		if !strings.Contains(referUrl, util.AllowedRefer) {
-			imgPath = imgPath + "?s=" + util.ExtImgSize
+		if !util.ReferAllow(context.Request.Referer()) {
+			if util.DoAd(context) {
+				imgPath = util.GetAdImgPath()
+			} else {
+				imgPath = imgPath + "?s=" + util.ExtImgSize
+			}
 		}
 	}
 
@@ -56,9 +59,12 @@ func rspOriginImg(imgPath string, context *gin.Context) {
 
 	buff := &bytes.Buffer{}
 	thumbImg := getThumbnailImg(imgUrl)
+	if thumbImg == nil {
+		context.Status(http.StatusNotFound)
+		return
+	}
 	jpeg.Encode(buff, thumbImg, nil)
 	context.Data(http.StatusOK, "image/jpeg", buff.Bytes())
-
 }
 
 func getThumbnailImg(imgUrl *url.URL) image.Image {
