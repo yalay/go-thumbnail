@@ -35,7 +35,7 @@ func imageHandler(context *gin.Context) {
 func rspOriginImg(imgPath string, context *gin.Context) {
 	imgBuff, err := util.LoadFile(imgPath)
 	if err != nil {
-		util.Log("[GIN] LoadFile error:" + err.Error())
+		util.Logln("[GIN] LoadFile error:" + err.Error())
 		context.Status(http.StatusNotFound)
 	} else {
 		rspCacheControl(imgBuff, context)
@@ -80,7 +80,7 @@ func getThumbnailImg(imgPath, size string, doCrop bool) image.Image {
 
 	srcImg, err := util.LoadImage(imgPath)
 	if err != nil {
-		util.Log("[GIN] LoadImage error:" + err.Error())
+		util.Logln("[GIN] LoadImage error:" + err.Error())
 		return nil
 	}
 

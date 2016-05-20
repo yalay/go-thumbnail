@@ -6,6 +6,7 @@ import (
 	"image"
 	_ "image/png"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"strconv"
 	"strings"
@@ -22,6 +23,14 @@ func LoadImage(imgPath string) (img image.Image, err error) {
 }
 
 func LoadFile(imgPath string) ([]byte, error) {
+	if strings.HasPrefix(strings.TrimLeft(imgPath, "/"), AdImgPath) {
+		imgs, err := ioutil.ReadDir(ImgRoot + AdImgPath)
+		if err != nil || len(imgs) == 0 {
+			return nil, err
+		}
+		randomImg := imgs[rand.Intn(len(imgs))]
+		return ioutil.ReadFile(ImgRoot + AdImgPath + randomImg.Name())
+	}
 	return ioutil.ReadFile(ImgRoot + imgPath)
 }
 
