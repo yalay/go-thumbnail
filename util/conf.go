@@ -11,7 +11,7 @@ var (
 	ServePort    = "6789"
 	AllowedRefer = "127.0.0.1"
 	LogFile      = "log"
-	AdImgPath    = "Ad/"
+	AdImgPath    = "User/"
 )
 
 func init() {
@@ -20,7 +20,7 @@ func init() {
 	flag.StringVar(&ServePort, "port", "6789", "Server port")
 	flag.StringVar(&AllowedRefer, "aRefer", "127.0.0.1", "Allowed refer")
 	flag.StringVar(&LogFile, "log", "log", "log file pre name")
-	flag.StringVar(&AdImgPath, "ad", "Ad/", "ad image path")
+	flag.StringVar(&AdImgPath, "ad", "User/", "ad image path")
 	flag.Parse()
 
 	if !strings.HasSuffix(ImgRoot, "/") {
