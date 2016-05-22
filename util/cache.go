@@ -1,8 +1,6 @@
 package util
 
 import (
-	"crypto/md5"
-	"fmt"
 	"image"
 	"image/jpeg"
 	"io/ioutil"
@@ -22,7 +20,7 @@ func WriteCache(imgPath, imgArg string, img image.Image) {
 	cacheName := genCacheName(imgPath, imgArg)
 	cacheFile, err := os.Create(CacheRoot + cacheName)
 	if err != nil {
-		fmt.Printf("WriteCache err:%v", err)
+		Logln("WriteCache err:" + err.Error())
 		return
 	}
 	defer cacheFile.Close()
@@ -59,7 +57,7 @@ func loadCache() {
 }
 
 func genCacheName(imgPath, imgArg string) string {
-	return fmt.Sprintf("%x", md5.Sum([]byte(imgPath+imgArg)))
+	return Md5Sum(imgPath + imgArg)
 }
 
 func run() {

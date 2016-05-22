@@ -1,12 +1,15 @@
 package util
 
 import (
+	"crypto/md5"
+	"fmt"
 	"image"
-	_ "image/png"
 	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
+
+	_ "image/png"
 )
 
 func LoadImage(imgPath string) (img image.Image, err error) {
@@ -32,4 +35,8 @@ func ParseImgArg(imgArg string) (uint, uint) {
 	width, _ := strconv.Atoi(args[0])
 	height, _ := strconv.Atoi(args[1])
 	return uint(width), uint(height)
+}
+
+func Md5Sum(key string) string {
+	return fmt.Sprintf("%x", md5.Sum([]byte(key)))
 }

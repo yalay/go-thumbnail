@@ -14,6 +14,12 @@ const (
 	adHttpFlag  = http.StatusTemporaryRedirect
 )
 
+// 并发获取cookie缓存,用户id+[时间戳][计数]
+var (
+	cookieBuffMap = make(map[string]int, 0)
+	cookieDelay   = 24 * time.Second
+)
+
 func Counter() gin.HandlerFunc {
 	return func(context *gin.Context) {
 		if ReferAllow(context.Request.Referer()) {
@@ -26,11 +32,13 @@ func Counter() gin.HandlerFunc {
 				cookie.Path = "/"
 				cookie.Expires = time.Now().Add(4 * time.Hour)
 			}
-			cnt, _ := strconv.Atoi(cookie.Value)
-			cnt = setAdStatus(cnt, context)
+
+			userId := getUserId(context)
+			cnt := getCookieValue(userId, cookie)
+			cnt = setAdStatus(cnt, userId, context)
 			cookie.Value = strconv.Itoa(cnt)
 			http.SetCookie(context.Writer, cookie)
-			Logln("[GIN] cookie value:" + cookie.Value)
+			Logln("[GIN] userId:" + userId + " cookie value:" + cookie.Value)
 		} else {
 			http.SetCookie(context.Writer, &http.Cookie{
 				Name:    cookieKey,
@@ -44,12 +52,35 @@ func Counter() gin.HandlerFunc {
 	}
 }
 
-func setAdStatus(count int, context *gin.Context) int {
-	if count < adMaxCounts {
-		return count + 1
+func getUserId(context *gin.Context) string {
+	ip := context.ClientIP()
+	ua := context.Request.UserAgent()
+	return Md5Sum(ip + ua)
+}
+
+func getCookieValue(userId string, cookie *http.Cookie) int {
+	if cnt, ok := cookieBuffMap[userId]; ok {
+		return cnt
+	} else {
+		cookieCnt, _ := strconv.Atoi(cookie.Value)
+		cookieBuffMap[userId] = cookieCnt
+		go cookieBuffDelay(userId)
+		return cookieCnt
 	}
-	context.Status(adHttpFlag)
-	return 0
+}
+
+func setAdStatus(count int, userId string, context *gin.Context) int {
+	if count < adMaxCounts {
+		count++
+	} else {
+		count = 0
+		context.Status(adHttpFlag)
+	}
+
+	if _, ok := cookieBuffMap[userId]; ok {
+		cookieBuffMap[userId] = count
+	}
+	return count
 }
 
 func DoAd(context *gin.Context) bool {
@@ -61,4 +92,11 @@ func DoAd(context *gin.Context) bool {
 
 func GetAdImgPath() string {
 	return AdPath + "random.jpg"
+}
+
+func cookieBuffDelay(key string) {
+	time.Sleep(cookieDelay)
+	if _, ok := cookieBuffMap[key]; ok {
+		delete(cookieBuffMap, key)
+	}
 }
