@@ -74,6 +74,7 @@ func setAdStatus(count int, userId string, context *gin.Context) int {
 		count++
 	} else {
 		count = 0
+		Logln("[GIN] Ad. UserId:" + userId)
 		context.Status(adHttpFlag)
 	}
 
