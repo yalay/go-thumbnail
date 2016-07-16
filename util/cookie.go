@@ -1,6 +1,8 @@
 package util
 
 import (
+	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"strconv"
 	"time"
@@ -52,6 +54,21 @@ func Counter() gin.HandlerFunc {
 	}
 }
 
+func DoAd(context *gin.Context) bool {
+	if context.Writer.Status() == adHttpFlag {
+		return true
+	}
+	return false
+}
+
+func GetRandomAdPath() string {
+	imgs, err := ioutil.ReadDir(ImgRoot + AdPath)
+	if err != nil || len(imgs) == 0 {
+		return ""
+	}
+	return AdPath + imgs[rand.Intn(len(imgs))].Name()
+}
+
 func getUserId(context *gin.Context) string {
 	ip := context.ClientIP()
 	ua := context.Request.UserAgent()
@@ -82,17 +99,6 @@ func setAdStatus(count int, userId string, context *gin.Context) int {
 		cookieBuffMap[userId] = count
 	}
 	return count
-}
-
-func DoAd(context *gin.Context) bool {
-	if context.Writer.Status() == adHttpFlag {
-		return true
-	}
-	return false
-}
-
-func GetAdImgPath() string {
-	return AdPath + "random.jpg"
 }
 
 func cookieBuffDelay(key string) {

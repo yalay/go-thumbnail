@@ -28,7 +28,10 @@ func imageHandler(context *gin.Context) {
 	} else {
 		if !util.ReferAllow(context.Request.Referer()) {
 			if util.DoAd(context) {
-				imgPath = util.GetAdImgPath()
+				adImgPath := util.GetRandomAdPath()
+				if adImgPath != "" {
+					imgPath = adImgPath
+				}
 			} else {
 				imgPath = imgPath + "?s=" + util.ExtImgSize
 			}
