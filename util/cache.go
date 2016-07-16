@@ -16,8 +16,8 @@ func init() {
 	go run()
 }
 
-func WriteCache(imgPath, imgArg string, img image.Image) {
-	cacheName := genCacheName(imgPath, imgArg)
+func WriteCache(imgUrl string, img image.Image) {
+	cacheName := genCacheName(imgUrl)
 	cacheFile, err := os.Create(CacheRoot + cacheName)
 	if err != nil {
 		Logln("WriteCache err:" + err.Error())
@@ -28,8 +28,8 @@ func WriteCache(imgPath, imgArg string, img image.Image) {
 	imgCache.Add(cacheName)
 }
 
-func FindInCache(imgPath, imgArg string) []byte {
-	cacheName := genCacheName(imgPath, imgArg)
+func FindInCache(imgUrl string) []byte {
+	cacheName := genCacheName(imgUrl)
 	if !imgCache.Contains(cacheName) {
 		return nil
 	}
@@ -56,8 +56,8 @@ func loadCache() {
 	imgCache = newImgCache
 }
 
-func genCacheName(imgPath, imgArg string) string {
-	return Md5Sum(imgPath + imgArg)
+func genCacheName(imgUrl string) string {
+	return Md5Sum(imgUrl)
 }
 
 func run() {

@@ -23,11 +23,6 @@ func imageHandler(context *gin.Context) {
 		return
 	}
 
-	if !doModifiedSince(context) {
-		context.Status(http.StatusNotModified)
-		return
-	}
-
 	if size != "" {
 		imgPath = imgPath + "?s=" + size
 	} else {
@@ -40,12 +35,12 @@ func imageHandler(context *gin.Context) {
 		}
 	}
 
-	rspOriginImg(util.RedirectUrl+imgPath, context)
+	rspImg(util.RedirectUrl+imgPath, context)
 	return
 }
 
 // 原图本地获取或者跳转到img服务器
-func rspOriginImg(imgPath string, context *gin.Context) {
+func rspImg(imgPath string, context *gin.Context) {
 	imgUrl, err := url.Parse(imgPath)
 	if err != nil || imgUrl == nil {
 		context.Status(http.StatusNotFound)
@@ -57,21 +52,26 @@ func rspOriginImg(imgPath string, context *gin.Context) {
 		return
 	}
 
+	// cache
+	cacheBuff := util.FindInCache(imgUrl.String())
+	if len(cacheBuff) > 0 {
+		rspCacheControl(cacheBuff, context)
+		return
+	}
+
 	buff := &bytes.Buffer{}
 	thumbImg := getThumbnailImg(imgUrl)
 	if thumbImg == nil {
 		context.Status(http.StatusNotFound)
 		return
 	}
+
 	jpeg.Encode(buff, thumbImg, nil)
-	context.Data(http.StatusOK, "image/jpeg", buff.Bytes())
+	rspCacheControl(buff.Bytes(), context)
+	go util.WriteCache(imgUrl.String(), thumbImg)
 }
 
 func getThumbnailImg(imgUrl *url.URL) image.Image {
-	if imgUrl == nil {
-		return nil
-	}
-
 	srcImg, err := util.LoadImage(imgUrl.Path)
 	if err != nil {
 		util.Logln("[GIN] LoadImage error:" + err.Error())
@@ -112,16 +112,22 @@ func doSkip(imgPath string, context *gin.Context) bool {
 	return false
 }
 
-func doModifiedSince(context *gin.Context) bool {
-	lastTime, err := time.Parse(http.TimeFormat, context.Request.Header.Get("If-Modified-Since"))
-	if err != nil {
-		return true
-	}
+func rspCacheControl(data []byte, context *gin.Context) {
+	eTag := util.Md5Sum(string(data))
+	reqTag := context.Request.Header.Get("If-None-Match")
+	if reqTag != "" && reqTag == eTag {
+		context.Header("ETag", eTag)
+		context.Status(http.StatusNotModified)
+	} else {
+		cacheSince := time.Now().Format(http.TimeFormat)
+		cacheUntil := time.Now().AddDate(0, 0, 1).Format(http.TimeFormat)
 
-	if lastTime.Add(4 * time.Hour).Before(time.Now()) {
-		return true
+		context.Header("ETag", eTag)
+		context.Header("Cache-Control", "max-age=86400")
+		context.Header("Last-Modified", cacheSince)
+		context.Header("Expires", cacheUntil)
+		context.Data(http.StatusOK, "image/jpeg", data)
 	}
-	return false
 }
 
 func main() {
