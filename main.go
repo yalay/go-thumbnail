@@ -68,7 +68,6 @@ func rspImg(imgPath string, context *gin.Context) {
 
 	jpeg.Encode(buff, thumbImg, nil)
 	rspCacheControl(buff.Bytes(), context)
-	go util.WriteCache(imgUrl.String(), thumbImg)
 }
 
 func getThumbnailImg(imgUrl *url.URL) image.Image {
@@ -87,7 +86,10 @@ func getThumbnailImg(imgUrl *url.URL) image.Image {
 		if dstHeight == 0 || dstWidth == 0 {
 			return srcImg
 		}
-		return util.ThumbnailCrop(dstWidth, dstHeight, srcImg)
+
+		thumbImg := util.ThumbnailCrop(dstWidth, dstHeight, srcImg)
+		go util.WriteCache(imgUrl.String(), thumbImg)
+		return thumbImg
 	}
 }
 
