@@ -40,7 +40,7 @@ func Counter() gin.HandlerFunc {
 			cnt = setAdStatus(cnt, userId, context)
 			cookie.Value = strconv.Itoa(cnt)
 			http.SetCookie(context.Writer, cookie)
-			Logln("[GIN] userId:" + userId + " cookie value:" + cookie.Value)
+			//Logln("[GIN] userId:" + userId + " cookie value:" + cookie.Value)
 		} else {
 			http.SetCookie(context.Writer, &http.Cookie{
 				Name:    cookieKey,
@@ -70,9 +70,7 @@ func GetRandomAdPath() string {
 }
 
 func getUserId(context *gin.Context) string {
-	ip := context.ClientIP()
-	ua := context.Request.UserAgent()
-	return Md5Sum(ip + ua)
+	return context.ClientIP() + context.Request.UserAgent()
 }
 
 func getCookieValue(userId string, cookie *http.Cookie) int {

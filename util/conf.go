@@ -28,7 +28,7 @@ func init() {
 	flag.StringVar(&WaterMarkImg, "wImg", "water.png", "Water mark image")
 	flag.StringVar(&ServePort, "port", "6789", "Server port")
 	flag.StringVar(&RedirectUrl, "rUrl", "", "Redirect url")
-	flag.StringVar(&AllowedRefer, "aRefer", "127.0.0.1", "Allowed refer")
+	flag.StringVar(&AllowedRefer, "aRefer", "127.0.0.1,192.168.1.1", "Allowed refers, split by ,")
 	flag.StringVar(&ExtImgSize, "eSize", "400x600", "ExtLink Img Size")
 	flag.StringVar(&LogFile, "log", "log", "log file pre name")
 	flag.StringVar(&AdPath, "adPath", "/User", "ad image path")
@@ -48,5 +48,15 @@ func init() {
 }
 
 func ReferAllow(refer string) bool {
-	return strings.Contains(refer, AllowedRefer)
+	allowedRefers := strings.Split(AllowedRefer, ",")
+	if len(allowedRefers) == 0 {
+		return true
+	}
+
+	for _, allowedRefer := range allowedRefers {
+		if strings.Contains(refer, allowedRefer) {
+			return true
+		}
+	}
+	return false
 }
