@@ -26,14 +26,18 @@ func imageHandler(context *gin.Context) {
 	if size != "" {
 		imgPath = imgPath + "?s=" + size
 	} else {
-		if !util.ReferAllow(context.Request.Referer()) {
-			if util.DoAd(context) {
-				adImgPath := util.GetRandomAdPath()
-				if adImgPath != "" {
-					imgPath = adImgPath
+		if isSpider(context) {
+			imgPath = imgPath + "?s=" + util.ExtImgSize
+		} else {
+			if !util.ReferAllow(context.Request.Referer()) {
+				if util.DoAd(context) {
+					adImgPath := util.GetRandomAdPath()
+					if adImgPath != "" {
+						imgPath = adImgPath
+					}
+				} else {
+					imgPath = imgPath + "?s=" + util.ExtImgSize
 				}
-			} else {
-				imgPath = imgPath + "?s=" + util.ExtImgSize
 			}
 		}
 	}
@@ -101,6 +105,10 @@ func doSkip(imgPath string, context *gin.Context) bool {
 	if strings.HasSuffix(imgPath, "favicon.ico") {
 		return true
 	}
+	return false
+}
+
+func isSpider(context *gin.Context) bool {
 	req := context.Request
 	if req == nil {
 		return true
@@ -113,7 +121,6 @@ func doSkip(imgPath string, context *gin.Context) bool {
 			return true
 		}
 	}
-
 	return false
 }
 
