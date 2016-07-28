@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 
+	_ "github.com/golang/image/webp"
+	_ "image/gif"
 	_ "image/png"
 )
 
