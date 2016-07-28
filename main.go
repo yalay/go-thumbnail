@@ -23,26 +23,31 @@ func imageHandler(context *gin.Context) {
 		return
 	}
 
-	if !doModifiedSince(context) {
-		context.Status(http.StatusNotModified)
-		return
-	}
-
-	referUrl := context.Request.Referer()
 	if size != "" {
 		imgPath = imgPath + "?s=" + size
 	} else {
-		if !strings.Contains(referUrl, util.AllowedRefer) {
+		if isSpider(context) {
 			imgPath = imgPath + "?s=" + util.ExtImgSize
+		} else {
+			if !util.ReferAllow(context.Request.Referer()) {
+				if util.DoAd(context) {
+					adImgPath := util.GetRandomAdPath()
+					if adImgPath != "" {
+						imgPath = adImgPath
+					}
+				} else {
+					imgPath = imgPath + "?s=" + util.ExtImgSize
+				}
+			}
 		}
 	}
 
-	rspOriginImg(util.RedirectUrl+imgPath, context)
+	rspImg(util.RedirectUrl+imgPath, context)
 	return
 }
 
 // 原图本地获取或者跳转到img服务器
-func rspOriginImg(imgPath string, context *gin.Context) {
+func rspImg(imgPath string, context *gin.Context) {
 	imgUrl, err := url.Parse(imgPath)
 	if err != nil || imgUrl == nil {
 		context.Status(http.StatusNotFound)
@@ -54,18 +59,25 @@ func rspOriginImg(imgPath string, context *gin.Context) {
 		return
 	}
 
+	// cache
+	cacheBuff := util.FindInCache(imgUrl.String())
+	if len(cacheBuff) > 0 {
+		rspCacheControl(cacheBuff, context)
+		return
+	}
+
 	buff := &bytes.Buffer{}
 	thumbImg := getThumbnailImg(imgUrl)
-	jpeg.Encode(buff, thumbImg, nil)
-	context.Data(http.StatusOK, "image/jpeg", buff.Bytes())
+	if thumbImg == nil {
+		context.Status(http.StatusNotFound)
+		return
+	}
 
+	jpeg.Encode(buff, thumbImg, nil)
+	rspCacheControl(buff.Bytes(), context)
 }
 
 func getThumbnailImg(imgUrl *url.URL) image.Image {
-	if imgUrl == nil {
-		return nil
-	}
-
 	srcImg, err := util.LoadImage(imgUrl.Path)
 	if err != nil {
 		util.Logln("[GIN] LoadImage error:" + err.Error())
@@ -81,7 +93,10 @@ func getThumbnailImg(imgUrl *url.URL) image.Image {
 		if dstHeight == 0 || dstWidth == 0 {
 			return srcImg
 		}
-		return util.ThumbnailCrop(dstWidth, dstHeight, srcImg)
+
+		thumbImg := util.ThumbnailCrop(dstWidth, dstHeight, srcImg)
+		go util.WriteCache(imgUrl.String(), thumbImg)
+		return thumbImg
 	}
 }
 
@@ -90,6 +105,10 @@ func doSkip(imgPath string, context *gin.Context) bool {
 	if strings.HasSuffix(imgPath, "favicon.ico") {
 		return true
 	}
+	return false
+}
+
+func isSpider(context *gin.Context) bool {
 	req := context.Request
 	if req == nil {
 		return true
@@ -102,20 +121,25 @@ func doSkip(imgPath string, context *gin.Context) bool {
 			return true
 		}
 	}
-
 	return false
 }
 
-func doModifiedSince(context *gin.Context) bool {
-	lastTime, err := time.Parse(http.TimeFormat, context.Request.Header.Get("If-Modified-Since"))
-	if err != nil {
-		return true
-	}
+func rspCacheControl(data []byte, context *gin.Context) {
+	eTag := util.Md5Sum(string(data))
+	reqTag := context.Request.Header.Get("If-None-Match")
+	if reqTag != "" && reqTag == eTag {
+		context.Header("ETag", eTag)
+		context.Status(http.StatusNotModified)
+	} else {
+		cacheSince := time.Now().Format(http.TimeFormat)
+		cacheUntil := time.Now().AddDate(0, 0, 1).Format(http.TimeFormat)
 
-	if lastTime.Add(4 * time.Hour).Before(time.Now()) {
-		return true
+		context.Header("ETag", eTag)
+		context.Header("Cache-Control", "max-age=86400")
+		context.Header("Last-Modified", cacheSince)
+		context.Header("Expires", cacheUntil)
+		context.Data(http.StatusOK, "image/jpeg", data)
 	}
-	return false
 }
 
 func main() {

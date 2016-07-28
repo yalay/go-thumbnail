@@ -14,6 +14,7 @@ var (
 	WaterSize    = "1x1" // 1x1用来标记添加水印
 	RedirectUrl  = ""    // 跳转路径,可以为本地路径
 	LogFile      = "log"
+	AdPath       = "/User"
 )
 
 var (
@@ -27,9 +28,10 @@ func init() {
 	flag.StringVar(&WaterMarkImg, "wImg", "water.png", "Water mark image")
 	flag.StringVar(&ServePort, "port", "6789", "Server port")
 	flag.StringVar(&RedirectUrl, "rUrl", "", "Redirect url")
-	flag.StringVar(&AllowedRefer, "aRefer", "127.0.0.1", "Allowed refer")
+	flag.StringVar(&AllowedRefer, "aRefer", "127.0.0.1,192.168.1.1", "Allowed refers, split by ,")
 	flag.StringVar(&ExtImgSize, "eSize", "400x600", "ExtLink Img Size")
 	flag.StringVar(&LogFile, "log", "log", "log file pre name")
+	flag.StringVar(&AdPath, "adPath", "/User", "ad image path")
 	flag.Parse()
 
 	if !strings.HasSuffix(ImgRoot, "/") {
@@ -39,4 +41,22 @@ func init() {
 	if !strings.HasSuffix(CacheRoot, "/") {
 		CacheRoot += "/"
 	}
+
+	if !strings.HasSuffix(AdPath, "/") {
+		AdPath += "/"
+	}
+}
+
+func ReferAllow(refer string) bool {
+	allowedRefers := strings.Split(AllowedRefer, ",")
+	if len(allowedRefers) == 0 {
+		return true
+	}
+
+	for _, allowedRefer := range allowedRefers {
+		if strings.Contains(refer, allowedRefer) {
+			return true
+		}
+	}
+	return false
 }
