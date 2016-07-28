@@ -1,6 +1,6 @@
 # go-thumbnail
 #### 功能描述
-1. 非失真缩略图压缩
+1. 非失真缩略图压缩，支持jpg、png、gif、webp格式
 2. 缓存机制
 3. 在线http服务
 
@@ -12,6 +12,7 @@
 5. [cutter](https://github.com/oliamb/cutter.git)
 6. [context](https://github.com/golang/net.git)
 7. [validator](https://github.com/go-playground/validator.git)
+8. [image](https://github.com/golang/image.git)
 
 #### 编译方法
 因为外部模块有部分依赖地址无效，因此修改为有效的依赖地址，并且全部整理在该项目中，该项目代码是完整的，不需要重新下载其他代码，直接可以用的。
