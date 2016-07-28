@@ -14,7 +14,9 @@
 7. [validator](https://github.com/go-playground/validator.git)
 8. [image](https://github.com/golang/image.git)
 
-#### 编译方法
+#### 编译方法 
+**特别注意：因为解码webp依赖go1.6版本库，因此该项目必须是go1.6以上版本才可以编译。**
+
 因为外部模块有部分依赖地址无效，因此修改为有效的依赖地址，并且全部整理在该项目中，该项目代码是完整的，不需要重新下载其他代码，直接可以用的。
 ```bash
 export GOPATH=$PWD
