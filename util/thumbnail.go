@@ -7,6 +7,10 @@ import (
 	"image"
 )
 
+const (
+	maxImgSize = 20480
+)
+
 // 缩略图按照指定的宽和高非失真缩放裁剪
 func ThumbnailCrop(minWidth, minHeight uint, img image.Image) image.Image {
 	origBounds := img.Bounds()
@@ -42,5 +46,12 @@ func ThumbnailCrop(minWidth, minHeight uint, img image.Image) image.Image {
 
 // 简单的缩放,指定最大宽和高
 func ThumbnailSimple(maxWidth, maxHeight uint, img image.Image) image.Image {
+	if maxWidth == 0 {
+		maxWidth = maxImgSize
+	}
+
+	if maxHeight == 0 {
+		maxHeight = maxImgSize
+	}
 	return resize.Thumbnail(maxWidth, maxHeight, img, resize.Lanczos3)
 }
