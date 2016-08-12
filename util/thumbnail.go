@@ -19,6 +19,14 @@ func ThumbnailCrop(minWidth, minHeight uint, img image.Image) image.Image {
 		return img
 	}
 
+	if minWidth > origWidth {
+		minWidth = origWidth
+	}
+
+	if minHeight > origHeight {
+		minHeight = origHeight
+	}
+
 	// Preserve aspect ratio
 	if origWidth > minWidth {
 		newHeight = uint(origHeight * minWidth / origWidth)
@@ -42,5 +50,16 @@ func ThumbnailCrop(minWidth, minHeight uint, img image.Image) image.Image {
 
 // 简单的缩放,指定最大宽和高
 func ThumbnailSimple(maxWidth, maxHeight uint, img image.Image) image.Image {
+	oriBounds := img.Bounds()
+	oriWidth := uint(oriBounds.Dx())
+	oriHeight := uint(oriBounds.Dy())
+
+	if maxWidth == 0 {
+		maxWidth = oriWidth
+	}
+
+	if maxHeight == 0 {
+		maxHeight = oriHeight
+	}
 	return resize.Thumbnail(maxWidth, maxHeight, img, resize.Lanczos3)
 }

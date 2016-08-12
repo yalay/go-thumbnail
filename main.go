@@ -91,11 +91,17 @@ func getThumbnailImg(imgUrl *url.URL) image.Image {
 		return srcImg
 	} else {
 		dstWidth, dstHeight := util.ParseImgArg(size)
-		if dstHeight == 0 || dstWidth == 0 {
+		if dstHeight == 0 && dstWidth == 0 {
 			return srcImg
 		}
 
-		thumbImg := util.ThumbnailCrop(dstWidth, dstHeight, srcImg)
+		var thumbImg image.Image
+		if dstHeight == 0 || dstWidth == 0 {
+			thumbImg = util.ThumbnailSimple(dstWidth, dstHeight, srcImg)
+		} else {
+			thumbImg = util.ThumbnailCrop(dstWidth, dstHeight, srcImg)
+		}
+
 		go util.WriteCache(imgUrl.String(), thumbImg)
 		return thumbImg
 	}
