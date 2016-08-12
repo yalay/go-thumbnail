@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"image"
 	"image/jpeg"
 	"net/http"
@@ -143,6 +144,12 @@ func rspCacheControl(data []byte, context *gin.Context) {
 }
 
 func main() {
+	defer func() {
+		if err := recover(); err != nil {
+			util.Logln(fmt.Sprintf("recover:%v", err))
+		}
+	}()
+
 	gin.SetMode(gin.ReleaseMode)
 
 	router := gin.New()
