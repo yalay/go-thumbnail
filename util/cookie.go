@@ -4,53 +4,65 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"net/http"
-	"strconv"
-	"time"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 )
 
 const (
-	cookieKey   = "cnt"
-	adMaxCounts = 24
+	adMaxCounts = 20
 	adHttpFlag  = http.StatusTemporaryRedirect
 )
 
-// 并发获取cookie缓存,用户id+[时间戳][计数]
 var (
-	cookieBuffMap = make(map[string]int, 0)
-	cookieDelay   = 24 * time.Second
+	gAccessCount *AccessCount
 )
+
+type AccessCount struct {
+	sync.RWMutex
+	userCount map[string]int
+}
+
+func init() {
+	gAccessCount = &AccessCount{
+		userCount: make(map[string]int, 0),
+	}
+}
+
+func (a *AccessCount) get(userId string) int {
+	a.RLock()
+	count := a.userCount[userId]
+	a.RUnlock()
+	return count
+}
+
+func (a *AccessCount) inc(userId string) {
+	a.Lock()
+	count := a.userCount[userId]
+	a.userCount[userId] = count + 1
+	a.Unlock()
+}
+
+func (a *AccessCount) reset(userId string) {
+	a.Lock()
+	a.userCount[userId] = 0
+	a.Unlock()
+}
 
 func Counter() gin.HandlerFunc {
 	return func(context *gin.Context) {
-		if ReferAllow(context.Request.Referer()) {
-			return
-		}
-
-		cookie, err := context.Request.Cookie(cookieKey)
-		if err == nil {
-			if cookie.Path != "/" {
-				cookie.Path = "/"
-				cookie.Expires = time.Now().Add(4 * time.Hour)
-			}
-
+		if !ReferAllow(context.Request.Referer()) {
 			userId := getUserId(context)
-			cnt := getCookieValue(userId, cookie)
-			cnt = setAdStatus(cnt, userId, context)
-			cookie.Value = strconv.Itoa(cnt)
-			http.SetCookie(context.Writer, cookie)
-			//Logln("[GIN] userId:" + userId + " cookie value:" + cookie.Value)
-		} else {
-			http.SetCookie(context.Writer, &http.Cookie{
-				Name:    cookieKey,
-				Value:   "0",
-				Path:    "/",
-				MaxAge:  4 * 60 * 60,
-				Expires: time.Now().Add(4 * time.Hour),
-			})
+			if gAccessCount.get(userId) >= adMaxCounts {
+				gAccessCount.reset(userId)
+				Logln("[GIN] Ad. UserId:" + userId)
+				context.Status(adHttpFlag)
+			} else {
+				gAccessCount.inc(userId)
+			}
 		}
 		context.Next()
+
 	}
 }
 
@@ -70,38 +82,6 @@ func GetRandomAdPath() string {
 }
 
 func getUserId(context *gin.Context) string {
-	return context.ClientIP() + context.Request.UserAgent()
-}
-
-func getCookieValue(userId string, cookie *http.Cookie) int {
-	if cnt, ok := cookieBuffMap[userId]; ok {
-		return cnt
-	} else {
-		cookieCnt, _ := strconv.Atoi(cookie.Value)
-		cookieBuffMap[userId] = cookieCnt
-		go cookieBuffDelay(userId)
-		return cookieCnt
-	}
-}
-
-func setAdStatus(count int, userId string, context *gin.Context) int {
-	if count < adMaxCounts {
-		count++
-	} else {
-		count = 0
-		Logln("[GIN] Ad. UserId:" + userId)
-		context.Status(adHttpFlag)
-	}
-
-	if _, ok := cookieBuffMap[userId]; ok {
-		cookieBuffMap[userId] = count
-	}
-	return count
-}
-
-func cookieBuffDelay(key string) {
-	time.Sleep(cookieDelay)
-	if _, ok := cookieBuffMap[key]; ok {
-		delete(cookieBuffMap, key)
-	}
+	//return context.ClientIP() + context.Request.UserAgent()
+	return context.ClientIP()
 }
