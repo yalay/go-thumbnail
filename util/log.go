@@ -8,7 +8,7 @@ import (
 
 var (
 	logBuffer     = &bytes.Buffer{}
-	writeDutation = 5 * time.Minute
+	writeDutation = 5 * time.Second
 )
 
 func init() {

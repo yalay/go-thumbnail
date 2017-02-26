@@ -15,5 +15,5 @@ func ThumbnailCrop(minWidth, minHeight int, srcImage image.Image) image.Image {
 
 // 简单的缩放,指定最大宽和高
 func ThumbnailSimple(maxWidth, maxHeight int, srcImage image.Image) image.Image {
-	return imaging.Fit(srcImage, maxWidth, maxHeight, imaging.Lanczos)
+	return imaging.Resize(srcImage, maxWidth, maxHeight, imaging.Lanczos)
 }
