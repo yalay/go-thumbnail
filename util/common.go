@@ -28,7 +28,7 @@ func LoadFile(imgPath string) ([]byte, error) {
 	return ioutil.ReadFile(ImgRoot + imgPath)
 }
 
-func ParseImgArg(imgArg string) (uint, uint) {
+func ParseImgArg(imgArg string) (int, int) {
 	args := strings.Split(imgArg, "x")
 	if len(args) != 2 {
 		return 0, 0
@@ -36,7 +36,7 @@ func ParseImgArg(imgArg string) (uint, uint) {
 
 	width, _ := strconv.Atoi(args[0])
 	height, _ := strconv.Atoi(args[1])
-	return uint(width), uint(height)
+	return width, height
 }
 
 func Md5Sum(key string) string {

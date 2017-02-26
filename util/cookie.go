@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	adMaxCounts = 20
+	adMaxCounts = 12
 	adHttpFlag  = http.StatusTemporaryRedirect
 )
 
