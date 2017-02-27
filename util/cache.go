@@ -1,24 +1,47 @@
 package util
 
 import (
+	"common"
+	"conf"
 	"image"
 	"image/jpeg"
 	"io/ioutil"
 	"os"
-	"time"
+	"path"
+	"sync"
 )
 
-var (
-	imgCache = NewSet()
-)
+var imgCache *cache
+
+type cache struct {
+	sync.RWMutex
+	imgNames common.Set
+}
 
 func init() {
-	go run()
+	imgCache = &cache{
+		imgNames: common.NewSet(),
+	}
+	loadCache()
+}
+
+func (c *cache) Add(imgName string) {
+	c.Lock()
+	c.imgNames.Add(imgName)
+	c.Unlock()
+}
+
+func (c *cache) Contains(imgName string) bool {
+	c.RLock()
+	isExist := c.imgNames.Contains(imgName)
+	c.RUnlock()
+	return isExist
 }
 
 func WriteCache(imgUrl string, img image.Image) {
 	cacheName := genCacheName(imgUrl)
-	cacheFile, err := os.Create(CacheRoot + cacheName)
+	cacheDir := conf.GetCacheDir()
+	cacheFile, err := os.Create(path.Join(cacheDir, cacheName))
 	if err != nil {
 		Logln("WriteCache err:" + err.Error())
 		return
@@ -33,41 +56,28 @@ func FindInCache(imgUrl string) []byte {
 	if !imgCache.Contains(cacheName) {
 		return nil
 	}
-
-	cacheBuff, _ := ioutil.ReadFile(CacheRoot + cacheName)
+	cacheDir := conf.GetCacheDir()
+	cacheBuff, _ := ioutil.ReadFile(path.Join(cacheDir, cacheName))
 	return cacheBuff
 }
 
 // %2FPure%2F22.jpg100x100
 func loadCache() {
-	newImgCache := NewSet()
-	if _, err := os.Stat(CacheRoot); err != nil {
-		os.MkdirAll(CacheRoot, os.ModePerm)
+	cacheDir := conf.GetCacheDir()
+	if _, err := os.Stat(cacheDir); err != nil {
+		os.MkdirAll(cacheDir, os.ModePerm)
 	}
 
-	files, _ := ioutil.ReadDir(CacheRoot)
+	files, _ := ioutil.ReadDir(cacheDir)
 	for _, file := range files {
 		if file.IsDir() {
 			continue
 		}
 
-		newImgCache.Add(file.Name())
+		imgCache.Add(file.Name())
 	}
-	imgCache = newImgCache
 }
 
 func genCacheName(imgUrl string) string {
 	return Md5Sum(imgUrl)
-}
-
-func run() {
-	loadCache()
-	timer := time.NewTimer(time.Hour)
-	for {
-		select {
-		case <-timer.C:
-			loadCache()
-			timer.Reset(time.Hour)
-		}
-	}
 }

@@ -2,11 +2,13 @@ package main
 
 import (
 	"bytes"
+	"conf"
 	"fmt"
 	"image"
 	"image/jpeg"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 	"util"
@@ -27,23 +29,23 @@ func imageHandler(context *gin.Context) {
 	if size != "" {
 		imgPath = imgPath + "?s=" + size
 	} else {
-		if isSpider(context) {
-			imgPath = imgPath + "?s=" + util.ExtImgSize
+		if conf.IsSpider(context.Request.UserAgent()) {
+			imgPath = imgPath + "?s=" + conf.GetExtImgSize()
 		} else {
-			if !util.ReferAllow(context.Request.Referer()) {
+			if !conf.IsAllowedRefer(context.Request.Referer()) {
 				if util.DoAd(context) {
-					adImgPath := util.GetRandomAdPath()
+					adImgPath := conf.GetRandomAdPath()
 					if adImgPath != "" {
 						imgPath = adImgPath
 					}
 				} else {
-					imgPath = imgPath + "?s=" + util.ExtImgSize
+					imgPath = imgPath + "?s=" + conf.GetExtImgSize()
 				}
 			}
 		}
 	}
 
-	rspImg(util.RedirectUrl+imgPath, context)
+	rspImg(imgPath, context)
 	return
 }
 
@@ -115,22 +117,6 @@ func doSkip(imgPath string, context *gin.Context) bool {
 	return false
 }
 
-func isSpider(context *gin.Context) bool {
-	req := context.Request
-	if req == nil {
-		return true
-	}
-
-	ua := req.UserAgent()
-	for _, spider := range util.Spiders {
-		if strings.Contains(ua, spider) {
-			util.Logln("[GIN] spider skip:" + ua)
-			return true
-		}
-	}
-	return false
-}
-
 func rspCacheControl(data []byte, context *gin.Context) {
 	eTag := util.Md5Sum(string(data))
 	reqTag := context.Request.Header.Get("If-None-Match")
@@ -161,5 +147,5 @@ func main() {
 	router := gin.New()
 	router.Use(util.Counter(), gin.LoggerWithWriter(util.GetLogBuf()), gin.Recovery())
 	router.GET("/*path", imageHandler)
-	router.Run(":" + util.ServePort)
+	router.Run(":" + strconv.Itoa(conf.GetListenPort()))
 }

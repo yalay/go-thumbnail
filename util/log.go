@@ -2,6 +2,7 @@ package util
 
 import (
 	"bytes"
+	"conf"
 	"os"
 	"time"
 )
@@ -30,7 +31,7 @@ func Logln(msg string) {
 func writeLog() {
 	for {
 		todady := time.Now().Format("2006-01-02")
-		file, err := os.OpenFile(LogFile+"."+todady, os.O_CREATE|os.O_WRONLY|os.O_APPEND, os.ModePerm)
+		file, err := os.OpenFile(conf.GetLogFile()+"."+todady, os.O_CREATE|os.O_WRONLY|os.O_APPEND, os.ModePerm)
 		if err != nil {
 			break
 		}

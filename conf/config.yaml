@@ -1,0 +1,18 @@
+spiders:
+  - Baiduspider
+  - Googlebot
+  - 360Spider
+
+allowedrefer:
+  - 127.0.0.1
+  - 192.168.1.1
+
+cachepath: ./cache/
+imgpath: ./public/
+adimgpath: User
+logfile: go-thumbnail.log
+
+extimgsize: 400x0
+adduration:
+  test.com: 16
+

@@ -1,6 +1,7 @@
 package util
 
 import (
+	"conf"
 	"crypto/md5"
 	"fmt"
 	"image"
@@ -15,7 +16,7 @@ import (
 )
 
 func LoadImage(imgPath string) (img image.Image, err error) {
-	file, err := os.Open(ImgRoot + imgPath)
+	file, err := os.Open(conf.GetImgFullPath(imgPath))
 	if err != nil {
 		return
 	}
@@ -25,7 +26,7 @@ func LoadImage(imgPath string) (img image.Image, err error) {
 }
 
 func LoadFile(imgPath string) ([]byte, error) {
-	return ioutil.ReadFile(ImgRoot + imgPath)
+	return ioutil.ReadFile(conf.GetImgFullPath(imgPath))
 }
 
 func ParseImgArg(imgArg string) (int, int) {

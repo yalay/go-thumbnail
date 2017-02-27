@@ -1,9 +1,9 @@
 package util
 
 import (
-	"io/ioutil"
-	"math/rand"
+	"conf"
 	"net/http"
+	"net/url"
 	"sync"
 
 	"github.com/gin-gonic/gin"
@@ -51,9 +51,12 @@ func (a *AccessCount) reset(userId string) {
 
 func Counter() gin.HandlerFunc {
 	return func(context *gin.Context) {
-		if !ReferAllow(context.Request.Referer()) {
+		refer := context.Request.Referer()
+		if !conf.IsAllowedRefer(refer) {
+			referUrl, _ := url.Parse(refer)
+			adDuration := conf.GetAdDuration(referUrl.Host)
 			userId := getUserId(context)
-			if gAccessCount.get(userId) >= adMaxCounts {
+			if gAccessCount.get(userId) >= adDuration {
 				gAccessCount.reset(userId)
 				Logln("[GIN] Ad. UserId:" + userId)
 				context.Status(adHttpFlag)
@@ -71,14 +74,6 @@ func DoAd(context *gin.Context) bool {
 		return true
 	}
 	return false
-}
-
-func GetRandomAdPath() string {
-	imgs, err := ioutil.ReadDir(ImgRoot + AdPath)
-	if err != nil || len(imgs) == 0 {
-		return ""
-	}
-	return AdPath + imgs[rand.Intn(len(imgs))].Name()
 }
 
 func getUserId(context *gin.Context) string {
