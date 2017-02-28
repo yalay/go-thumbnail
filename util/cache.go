@@ -6,6 +6,7 @@ import (
 	"image"
 	"image/jpeg"
 	"io/ioutil"
+	"log"
 	"os"
 	"path"
 	"sync"
@@ -43,7 +44,7 @@ func WriteCache(imgUrl string, img image.Image) {
 	cacheDir := conf.GetCacheDir()
 	cacheFile, err := os.Create(path.Join(cacheDir, cacheName))
 	if err != nil {
-		Logln("WriteCache err:" + err.Error())
+		log.Println("WriteCache err:" + err.Error())
 		return
 	}
 	defer cacheFile.Close()

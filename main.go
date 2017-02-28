@@ -3,9 +3,9 @@ package main
 import (
 	"bytes"
 	"conf"
-	"fmt"
 	"image"
 	"image/jpeg"
+	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -83,7 +83,7 @@ func rspImg(imgPath string, context *gin.Context) {
 func getThumbnailImg(imgUrl *url.URL) image.Image {
 	srcImg, err := util.LoadImage(imgUrl.Path)
 	if err != nil {
-		util.Logln("[GIN] LoadImage error:" + err.Error())
+		log.Println("[GIN] LoadImage error:" + err.Error())
 		return nil
 	}
 
@@ -138,14 +138,14 @@ func rspCacheControl(data []byte, context *gin.Context) {
 func main() {
 	defer func() {
 		if err := recover(); err != nil {
-			util.Logln(fmt.Sprintf("recover:%v", err))
+			log.Printf("recover:%v\n", err)
 		}
 	}()
 
 	gin.SetMode(gin.ReleaseMode)
 
 	router := gin.New()
-	router.Use(util.Counter(), gin.LoggerWithWriter(util.GetLogBuf()), gin.Recovery())
+	router.Use(util.Counter(), gin.Logger(), gin.Recovery())
 	router.GET("/*path", imageHandler)
 	router.Run(":" + strconv.Itoa(conf.GetListenPort()))
 }

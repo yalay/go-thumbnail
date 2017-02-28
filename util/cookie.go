@@ -2,6 +2,7 @@ package util
 
 import (
 	"conf"
+	"log"
 	"net/http"
 	"net/url"
 	"sync"
@@ -58,7 +59,7 @@ func Counter() gin.HandlerFunc {
 			userId := getUserId(context)
 			if gAccessCount.get(userId) >= adDuration {
 				gAccessCount.reset(userId)
-				Logln("[GIN] Ad. UserId:" + userId)
+				log.Println("[GIN] Ad. UserId:" + userId)
 				context.Status(adHttpFlag)
 			} else {
 				gAccessCount.inc(userId)
